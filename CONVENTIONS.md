@@ -35,6 +35,8 @@ Shared utils, components, and actions should live at the appropriate root level 
 
 ## Typing
 
+### Where to store types
+
 Types that are tied to a specific function should live next to that function (e.g React Component props or function parameters).
 
 ```
@@ -43,12 +45,14 @@ interface MyComponentProps {
   prop1: string
 }
 
-export default function MyComponent({prop1}: MyComponentProps){
+export default function MyComponent({ prop1 }: MyComponentProps){
   ...
 }
 ```
 
 Shared types used across multiple functions should be placed in the appropriate /types/*.types.ts file
+
+### Type Inference
 
 Let TypeScript infer types when appropriate (depend on linting for non-obvious cases).
 
@@ -58,20 +62,28 @@ e.g
 const myNumber = 2
 ```
 
-Does not need to be typed as a number and
+Does not need to be typed as a number
+
+## Comments
+
+Do not comment on obvious readable code.  If comments are needed, try to use tsDocs to take advantage of intellisense benefits.
+
+## Styles
+
+Tailwind CSS Styling Conventions
+
+We use Tailwind CSS to style components. All Tailwind class strings must be defined in the appropriate .styles.ts file, rather than written directly in the component's JSX.
 
 ```
-interface GetSumParams {
-  num1: number
-  num2: number
-}
-export function getSum({num1, num2}: GetSumParams){
-  return num1 + num2
-}
+// Button.styles.ts
+export const buttonStyle = 'bg-red-500 mt-5';
+
+// Button.tsx
+import { buttonStyle } from './Button.styles';
+
+<Button className={buttonStyle} />
 ```
 
-getSum does not need a return type
-
-##
+Avoid writing raw Tailwind class strings directly in className props. Keep styling definitions separate from component markup to maintain consistency and make styles easier to locate and maintain.
 
 
