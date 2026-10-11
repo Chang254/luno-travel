@@ -33,4 +33,45 @@ If a component is a shared child of two components, it should live next to both 
 
 Shared utils, components, and actions should live at the appropriate root level folder (e.g /components)
 
+## Typing
+
+Types that are tied to a specific function should live next to that function (e.g React Component props or function parameters).
+
+```
+interface MyComponentProps {
+  /** Description of prop1 */
+  prop1: string
+}
+
+export default function MyComponent({prop1}: MyComponentProps){
+  ...
+}
+```
+
+Shared types used across multiple functions should be placed in the appropriate /types/*.types.ts file
+
+Let TypeScript infer types when appropriate (depend on linting for non-obvious cases).
+
+e.g
+
+```
+const myNumber = 2
+```
+
+Does not need to be typed as a number and
+
+```
+interface GetSumParams {
+  num1: number
+  num2: number
+}
+export function getSum({num1, num2}: GetSumParams){
+  return num1 + num2
+}
+```
+
+getSum does not need a return type
+
+##
+
 
