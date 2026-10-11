@@ -1,5 +1,6 @@
-import { LunoLogoStyles } from "./LunoLogo.styles";
+"use client"
+import { styles } from "./LunoLogo.styles";
 
 export default function LunoLogo() {
-  return <h1 className={LunoLogoStyles}>LUNO</h1>;
+  return <h1 className={styles.header}>LUNO</h1>;
 }

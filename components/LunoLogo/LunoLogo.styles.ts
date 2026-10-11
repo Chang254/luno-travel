@@ -1,1 +1,3 @@
-export const LunoLogoStyles = "text-4xl font-bold font-cinzel text-espresso";
+export const styles = {
+    header: "text-4xl font-bold font-cinzel text-espresso",
+}

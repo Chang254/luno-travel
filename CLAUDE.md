@@ -38,3 +38,7 @@ Do not hoist `createClient()` to a module-level singleton. Create a new client i
 ## Starter vs conventions
 
 Existing UI is still flat starter files (for example `components/auth-button.tsx`). New components should use the folder layout in [CONVENTIONS.md](CONVENTIONS.md). Do not mass-refactor the starter unless asked.
+
+## Testing
+
+Unit test all new components with business logic.  Shared components that are UI only do not require unit testing unless there is testable logic (not only visual)
