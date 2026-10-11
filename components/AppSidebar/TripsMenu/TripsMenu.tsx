@@ -1,11 +1,15 @@
 "use client";
 
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+
 import { SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar";
 import { useTrips } from "@/lib/api/trips";
 import { styles } from "./TripsMenu.styles";
 
 export default function TripsMenu() {
   const { data: trips, isPending, isError } = useTrips();
+  const pathname = usePathname();
 
   if (isPending) {
     return (
@@ -39,13 +43,19 @@ export default function TripsMenu() {
 
   return (
     <>
-      {trips.map((trip) => (
-        <SidebarMenuItem key={trip.id}>
-          <SidebarMenuButton tooltip={trip.title}>
-            <span>{trip.title}</span>
-          </SidebarMenuButton>
-        </SidebarMenuItem>
-      ))}
+      {trips.map((trip) => {
+        const href = `/editor/${trip.id}`;
+
+        return (
+          <SidebarMenuItem key={trip.id}>
+            <SidebarMenuButton asChild isActive={pathname === href} tooltip={trip.title}>
+              <Link href={href}>
+                <span>{trip.title}</span>
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        );
+      })}
     </>
   );
 }

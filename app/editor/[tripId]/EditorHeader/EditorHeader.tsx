@@ -3,9 +3,15 @@
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import SaveButton from "./SaveButton";
 import { styles } from "./EditorHeader.styles";
 
-export default function EditorHeader() {
+interface EditorHeaderProps {
+  title: string;
+  tripId: string;
+}
+
+export default function EditorHeader({ title, tripId }: EditorHeaderProps) {
   return (
     <header className={styles.header}>
       <Button variant="ghost" size="icon" asChild aria-label="Back to home">
@@ -13,7 +19,8 @@ export default function EditorHeader() {
           <ArrowLeft />
         </Link>
       </Button>
-      <h1 className={styles.title}>Editor</h1>
+      <h1 className={styles.title}>{title}</h1>
+      <SaveButton tripId={tripId} />
     </header>
   );
 }

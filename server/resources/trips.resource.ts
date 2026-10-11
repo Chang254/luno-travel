@@ -15,3 +15,37 @@ export async function findTripsByOwnerId(
   if (error) throw error;
   return data;
 }
+
+export async function findTripById(
+  supabase: SupabaseClient<Database>,
+  id: string,
+  ownerId: string,
+): Promise<Trip | null> {
+  const { data, error } = await supabase
+    .from("trips")
+    .select("*")
+    .eq("id", id)
+    .eq("owner_id", ownerId)
+    .maybeSingle();
+
+  if (error) throw error;
+  return data;
+}
+
+export async function updateTripContent(
+  supabase: SupabaseClient<Database>,
+  id: string,
+  ownerId: string,
+  content: Trip["content"],
+): Promise<Trip> {
+  const { data, error } = await supabase
+    .from("trips")
+    .update({ content })
+    .eq("id", id)
+    .eq("owner_id", ownerId)
+    .select("*")
+    .single();
+
+  if (error) throw error;
+  return data;
+}

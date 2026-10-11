@@ -9,6 +9,7 @@ import {
   SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
+  SidebarGroupLabel,
   SidebarHeader,
   SidebarMenu,
   SidebarRail,
@@ -34,6 +35,7 @@ export default function AppSidebar({ footer }: AppSidebarProps) {
       </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>
+          <SidebarGroupLabel>Trips</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               <TripsMenu />

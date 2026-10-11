@@ -16,9 +16,11 @@ import { useSyncToolbarState } from "./Toolbar.helpers";
 import { styles } from "./Toolbar.styles";
 import UnderlineButton from "./UnderlineButton";
 import UndoButton from "./UndoButton";
+import { useSyncEditorSaveState } from "../../EditorSaveStore.helpers";
 
 export default function Toolbar() {
   useSyncToolbarState();
+  useSyncEditorSaveState();
 
   return (
     <div className={styles.toolbar}>

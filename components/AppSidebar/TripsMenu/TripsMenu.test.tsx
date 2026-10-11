@@ -6,6 +6,11 @@ import TripsMenu from "./TripsMenu";
 
 jest.mock("../../../lib/api/trips");
 
+const mockUsePathname = jest.fn();
+jest.mock("next/navigation", () => ({
+  usePathname: () => mockUsePathname(),
+}));
+
 function renderTripsMenu() {
   return render(
     <SidebarProvider>
@@ -15,6 +20,10 @@ function renderTripsMenu() {
 }
 
 describe("TripsMenu", () => {
+  beforeEach(() => {
+    mockUsePathname.mockReturnValue("/");
+  });
+
   it("shows a loading state while trips are pending", () => {
     jest.mocked(useTrips).mockReturnValue({
       isPending: true,
@@ -51,7 +60,7 @@ describe("TripsMenu", () => {
     expect(screen.getByText("No trips yet")).toBeInTheDocument();
   });
 
-  it("lists each trip's title", () => {
+  it("links each trip to its editor route", () => {
     jest.mocked(useTrips).mockReturnValue({
       isPending: false,
       isError: false,
@@ -79,7 +88,52 @@ describe("TripsMenu", () => {
 
     renderTripsMenu();
 
-    expect(screen.getByText("Kyoto")).toBeInTheDocument();
-    expect(screen.getByText("Lisbon")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Kyoto" })).toHaveAttribute(
+      "href",
+      "/editor/1",
+    );
+    expect(screen.getByRole("link", { name: "Lisbon" })).toHaveAttribute(
+      "href",
+      "/editor/2",
+    );
+  });
+
+  it("marks the current trip's link as active", () => {
+    mockUsePathname.mockReturnValue("/editor/1");
+    jest.mocked(useTrips).mockReturnValue({
+      isPending: false,
+      isError: false,
+      data: [
+        {
+          id: "1",
+          owner_id: "user-1",
+          title: "Kyoto",
+          content: {},
+          cover_image_url: null,
+          created_at: "2026-01-01T00:00:00.000Z",
+          updated_at: "2026-01-01T00:00:00.000Z",
+        },
+        {
+          id: "2",
+          owner_id: "user-1",
+          title: "Lisbon",
+          content: {},
+          cover_image_url: null,
+          created_at: "2026-01-01T00:00:00.000Z",
+          updated_at: "2026-01-01T00:00:00.000Z",
+        },
+      ],
+    } as unknown as ReturnType<typeof useTrips>);
+
+    renderTripsMenu();
+
+    expect(screen.getByRole("link", { name: "Kyoto" })).toHaveAttribute(
+      "data-active",
+      "true",
+    );
+    expect(screen.getByRole("link", { name: "Lisbon" })).toHaveAttribute(
+      "data-active",
+      "false",
+    );
   });
 });
