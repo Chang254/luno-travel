@@ -36,6 +36,14 @@
     --chart-4: var(--sand);
     --chart-5: var(--ivory);
     --radius: 0.5rem;
+    --sidebar: var(--ivory);
+    --sidebar-foreground: var(--espresso);
+    --sidebar-primary: var(--terracotta);
+    --sidebar-primary-foreground: var(--white);
+    --sidebar-accent: var(--sand);
+    --sidebar-accent-foreground: var(--espresso);
+    --sidebar-border: var(--sand);
+    --sidebar-ring: var(--terracotta);
   }
   .dark {
     --background: var(--espresso);
@@ -62,6 +70,14 @@
     --chart-3: var(--sand);
     --chart-4: var(--ivory);
     --chart-5: var(--espresso);
+    --sidebar: var(--espresso);
+    --sidebar-foreground: var(--ivory);
+    --sidebar-primary: var(--terracotta);
+    --sidebar-primary-foreground: var(--ivory);
+    --sidebar-accent: var(--olive);
+    --sidebar-accent-foreground: var(--ivory);
+    --sidebar-border: var(--olive);
+    --sidebar-ring: var(--sand);
   }
 }
 

@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Cinzel, Geist } from "next/font/google";
 import { ThemeProvider } from "next-themes";
+import { AppSidebar } from "@/components/AppSidebar";
+import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import "./globals.css";
 
 const defaultUrl = process.env.VERCEL_URL
@@ -35,16 +37,19 @@ export default function RootLayout({
     <html
       lang="en"
       suppressHydrationWarning
-      className={`${geistSans.variable} ${cinzel.variable}`}
+      className={`${geistSans.variable} ${cinzel.variable} h-full`}
     >
-      <body className={`${geistSans.className} antialiased`}>
+      <body className={`${geistSans.className} h-full antialiased`}>
         <ThemeProvider
           attribute="class"
-          defaultTheme="system"
+          defaultTheme="light"
           enableSystem
           disableTransitionOnChange
         >
-          {children}
+          <SidebarProvider>
+            <AppSidebar />
+            <SidebarInset>{children}</SidebarInset>
+          </SidebarProvider>
         </ThemeProvider>
       </body>
     </html>
