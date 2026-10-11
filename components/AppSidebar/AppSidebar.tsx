@@ -1,6 +1,6 @@
 "use client";
 
-import { LunoLogo } from "@/components/LunoLogo";
+import LunoLogo from "@/components/LunoLogo";
 import {
   Sidebar,
   SidebarContent,

@@ -1,1 +1,1 @@
-export { default as AlignLeftButton } from "./AlignLeftButton";
+export { default } from "./AlignLeftButton";

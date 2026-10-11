@@ -1,1 +1,1 @@
-export { default as BoldButton } from "./BoldButton";
+export { default } from "./BoldButton";

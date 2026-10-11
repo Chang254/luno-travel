@@ -1,1 +1,1 @@
-export { default as FontSelector } from "./FontSelector";
+export { default } from "./FontSelector";

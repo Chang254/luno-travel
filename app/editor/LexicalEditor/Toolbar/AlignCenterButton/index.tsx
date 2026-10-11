@@ -1,1 +1,1 @@
-export { default as AlignCenterButton } from "./AlignCenterButton";
+export { default } from "./AlignCenterButton";

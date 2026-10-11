@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 
-import { ColorPicker } from "./ColorPicker";
+import ColorPicker from "./ColorPicker";
 import { TEXT_COLOR_OPTIONS, useTextColor } from "./ColorSelector.helpers";
 import { styles } from "./ColorSelector.styles";
 

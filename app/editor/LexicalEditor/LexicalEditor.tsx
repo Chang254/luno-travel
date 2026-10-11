@@ -9,7 +9,7 @@ import {
   type EditorChildrenComponentProps,
 } from "@lexical/react/ReactExtension";
 
-import { Toolbar } from "./Toolbar";
+import Toolbar from "./Toolbar";
 import DraggableBlockPlugin from "./DraggableBlockPlugin";
 import { editorConfig, editorExtensionDependencies } from "./LexicalEditor.helpers";
 import { styles } from "./LexicalEditor.styles";

@@ -1,1 +1,1 @@
-export { default as InsertDropdown } from "./InsertDropdown";
+export { default } from "./InsertDropdown";

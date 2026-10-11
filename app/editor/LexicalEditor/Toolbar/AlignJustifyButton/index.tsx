@@ -1,1 +1,1 @@
-export { default as AlignJustifyButton } from "./AlignJustifyButton";
+export { default } from "./AlignJustifyButton";

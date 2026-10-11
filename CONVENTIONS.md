@@ -16,6 +16,27 @@ Each component should follow the following structure
 ```
 The goal of this structure is for the React component to be deterministic by extracting all complex calculations into pure utility functions and wrapping state changes inside custom hooks. This ensures your component file contains minimal procedural logic, resulting in predictable and human readable UI outcome
 
+`.styles.ts`, `.helpers.tsx`, and `.actions.ts` are added only as needed — a component with no server actions has no `.actions.ts` file, and so on. `index.tsx` and `MyComponent.tsx` are the only files every component requires.
+
+`index.tsx` should always re-export the component's default export as a default export, not a named one:
+
+```
+// index.tsx
+export { default } from "./MyComponent";
+```
+
+Consumers should always import from the folder (the barrel), never by reaching into the file directly:
+
+```
+// Good
+import MyComponent from "@/components/MyComponent";
+
+// Avoid
+import MyComponent from "@/components/MyComponent/MyComponent";
+```
+
+If `MyComponent.actions.ts` creates a Supabase client, follow the same rule as everywhere else: create it inside each action function rather than hoisting it to module scope (see CLAUDE.md, Auth and clients).
+
 If a component is a child of another component, it should be nested inside of its parent's folder
 
 ```
@@ -66,7 +87,9 @@ Does not need to be typed as a number
 
 ## Comments
 
-Do not comment on obvious readable code.  If comments are needed, try to use tsDocs to take advantage of intellisense benefits.
+Omit Obvious Comments: Use comments to provide context that is not available by the code itself.
+
+Leverage TSDoc for Context: When logic requires explanation, document it using TSDoc (/** ... */) instead of standard inline comments when possible. This ensures the context is surfaced directly via editor IntelliSense during asset consumption.
 
 ## Styles
 
@@ -76,19 +99,24 @@ We use Tailwind CSS to style components. All Tailwind class strings must be defi
 
 ```
 // Button.styles.ts
-export const buttonStyle = 'bg-red-500 mt-5';
+export const styles = {
+  button: 'bg-red-500 mt-5',
+};
 
 // Button.tsx
-import { buttonStyle } from './Button.styles';
+import { styles } from './Button.styles';
 
-<Button className={buttonStyle} />
+<Button className={styles.button} />
 ```
 
 Avoid writing raw Tailwind class strings directly in className props. Keep styling definitions separate from component markup to maintain consistency and make styles easier to locate and maintain.
 
 ## Testing
 
+Write unit tests for components or functions that contain business logic.  Purely presentational components do not need unit tests.
+
 Tests should mimic real user behavior as closely as possible
 
 • Prefer userEvent over fireEvent: ensures that complete interaction paths (like clicking, typing, or tabbing) fully dispatch all underlying side effects exactly like a human user would experience them.
+
 • Prioritize Visible Element Selectors: Avoid querying internal component states, test IDs, or strict CSS classes unless absolutely necessary. Instead, query elements based on visible text, labels, accessible roles, or placeholders.

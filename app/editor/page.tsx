@@ -2,7 +2,7 @@
 import { Suspense } from "react";
 
 import LexicalEditor from './LexicalEditor'
-import { EditorHeader } from "./EditorHeader";
+import EditorHeader from "./EditorHeader";
 import { styles } from "./editor.styles";
 
 export default function EditorPage() {

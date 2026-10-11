@@ -1,1 +1,1 @@
-export { default as LunoLogo } from "./LunoLogo";
+export { default } from "./LunoLogo";

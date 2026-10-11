@@ -1,1 +1,1 @@
-export { default as BlockTypeDropdown } from "./BlockTypeDropdown";
+export { default } from "./BlockTypeDropdown";

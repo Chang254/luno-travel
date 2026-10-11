@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Cinzel, Geist } from "next/font/google";
 import { ThemeProvider } from "next-themes";
-import { AppSidebar } from "@/components/AppSidebar";
+import AppSidebar from "@/components/AppSidebar";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import "./globals.css";
 

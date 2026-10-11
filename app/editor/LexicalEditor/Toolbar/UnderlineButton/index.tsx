@@ -1,1 +1,1 @@
-export { default as UnderlineButton } from "./UnderlineButton";
+export { default } from "./UnderlineButton";

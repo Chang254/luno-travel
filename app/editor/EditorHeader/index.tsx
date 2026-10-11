@@ -1,1 +1,1 @@
-export { default as EditorHeader } from "./EditorHeader";
+export { default } from "./EditorHeader";

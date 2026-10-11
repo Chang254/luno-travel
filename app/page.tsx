@@ -1,4 +1,4 @@
-import { LunoLogo } from "@/components/LunoLogo";
+import LunoLogo from "@/components/LunoLogo";
 
 export default function Home() {
   return (
