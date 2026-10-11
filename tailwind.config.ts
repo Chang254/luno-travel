@@ -10,7 +10,17 @@ export default {
   ],
   theme: {
     extend: {
+      fontFamily: {
+        sans: ["var(--font-geist-sans)", "sans-serif"],
+        cinzel: ["var(--font-cinzel)", "serif"],
+      },
       colors: {
+        ivory: "hsl(var(--ivory))",
+        espresso: "hsl(var(--espresso))",
+        terracotta: "hsl(var(--terracotta))",
+        sand: "hsl(var(--sand))",
+        olive: "hsl(var(--olive))",
+        white: "hsl(var(--white))",
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
         card: {
