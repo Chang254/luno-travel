@@ -1,5 +1,7 @@
 "use client";
 
+import type { ReactNode } from "react";
+
 import LunoLogo from "@/components/LunoLogo";
 import {
   Sidebar,
@@ -9,16 +11,17 @@ import {
   SidebarGroupContent,
   SidebarHeader,
   SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
   SidebarRail,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
 import { styles } from "./AppSidebar.styles";
+import TripsMenu from "./TripsMenu";
 
-const PLACEHOLDER_ITEMS = ["Trips", "Entries", "Media"];
+interface AppSidebarProps {
+  footer: ReactNode;
+}
 
-export default function AppSidebar() {
+export default function AppSidebar({ footer }: AppSidebarProps) {
   return (
     <Sidebar collapsible="icon">
       <SidebarHeader>
@@ -33,19 +36,13 @@ export default function AppSidebar() {
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
-              {PLACEHOLDER_ITEMS.map((item) => (
-                <SidebarMenuItem key={item}>
-                  <SidebarMenuButton disabled tooltip={item}>
-                    <span>{item}</span>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
+              <TripsMenu />
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
       <SidebarFooter>
-        <span className={styles.footerText}>Account placeholder</span>
+        <div className={styles.account}>{footer}</div>
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>

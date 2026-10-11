@@ -2,7 +2,48 @@
 
 This document contains the patterns and practices that should be followed when contributing code
 
-## Folder Structure
+## General
+
+### Typing
+
+#### Where to store types
+
+Types that are tied to a specific function should live next to that function (e.g React Component props or function parameters).
+
+```
+interface MyComponentProps {
+  /** Description of prop1 */
+  prop1: string
+}
+
+export default function MyComponent({ prop1 }: MyComponentProps){
+  ...
+}
+```
+
+Shared types used across multiple functions should be placed in the appropriate /types/*.types.ts file
+
+#### Type Inference
+
+Let TypeScript infer types when appropriate (depend on linting for non-obvious cases).
+
+e.g
+
+```
+const myNumber = 2
+```
+
+Does not need to be typed as a number
+
+#### Comments
+
+Omit Obvious Comments: Use comments to provide context that is not available by the code itself.
+
+Leverage TSDoc for Context: When logic requires explanation, document it using TSDoc (/** ... */) instead of standard inline comments when possible. This ensures the context is surfaced directly via editor IntelliSense during asset consumption.
+
+## Frontend
+
+### Folder Structure
 
 Each component should follow the following structure
 
@@ -11,7 +52,6 @@ Each component should follow the following structure
   -📄 index.tsx // Contains default export
   -📄 MyComponent.styles.ts // Contains tailwind strings
   -📄 MyComponent.helpers.tsx // Utils and custom hooks consumed by MyComponent
-  -📄 MyComponent.actions.ts // Server Actions consumed by MyComponent
   -📄 MyComponent.tsx // React Component
 ```
 The goal of this structure is for the React component to be deterministic by extracting all complex calculations into pure utility functions and wrapping state changes inside custom hooks. This ensures your component file contains minimal procedural logic, resulting in predictable and human readable UI outcome
@@ -54,44 +94,7 @@ If a component is a shared child of two components, it should live next to both 
 
 Shared utils, components, and actions should live at the appropriate root level folder (e.g /components)
 
-## Typing
-
-### Where to store types
-
-Types that are tied to a specific function should live next to that function (e.g React Component props or function parameters).
-
-```
-interface MyComponentProps {
-  /** Description of prop1 */
-  prop1: string
-}
-
-export default function MyComponent({ prop1 }: MyComponentProps){
-  ...
-}
-```
-
-Shared types used across multiple functions should be placed in the appropriate /types/*.types.ts file
-
-### Type Inference
-
-Let TypeScript infer types when appropriate (depend on linting for non-obvious cases).
-
-e.g
-
-```
-const myNumber = 2
-```
-
-Does not need to be typed as a number
-
-## Comments
-
-Omit Obvious Comments: Use comments to provide context that is not available by the code itself.
-
-Leverage TSDoc for Context: When logic requires explanation, document it using TSDoc (/** ... */) instead of standard inline comments when possible. This ensures the context is surfaced directly via editor IntelliSense during asset consumption.
-
-## Styles
+### Styles
 
 Tailwind CSS Styling Conventions
 
@@ -111,7 +114,7 @@ import { styles } from './Button.styles';
 
 Avoid writing raw Tailwind class strings directly in className props. Keep styling definitions separate from component markup to maintain consistency and make styles easier to locate and maintain.
 
-## Testing
+### Testing
 
 Write unit tests for components or functions that contain business logic.  Purely presentational components do not need unit tests.
 
@@ -120,3 +123,42 @@ Tests should mimic real user behavior as closely as possible
 • Prefer userEvent over fireEvent: ensures that complete interaction paths (like clicking, typing, or tabbing) fully dispatch all underlying side effects exactly like a human user would experience them.
 
 • Prioritize Visible Element Selectors: Avoid querying internal component states, test IDs, or strict CSS classes unless absolutely necessary. Instead, query elements based on visible text, labels, accessible roles, or placeholders.
+
+## Backend
+
+### API layer (tRPC)
+
+The API is built with tRPC so it can eventually be called from multiple frontends, not just this Next.js app. It lives in `server/` (sibling to `app/`, `components/`, `lib/`) and is split into four layers, each with one responsibility:
+
+```
+server/
+  trpc/
+    trpc.ts            // initTRPC, exports router, publicProcedure, protectedProcedure
+    context.ts          // per-request context: { supabase, user }
+    routers/
+      _app.ts            // appRouter — combines all feature routers
+      <feature>.ts         // e.g. trips.ts
+  services/
+    <feature>.service.ts   // business logic, calls the resource layer
+  resources/
+    <feature>.resource.ts  // the ONLY layer allowed to call the Supabase client
+  models/
+    <feature>.types.ts       // shared domain types (and zod schemas once a procedure takes input)
+```
+
+- **Routers** are thin: parse input, call a service, return its result. No business logic, no direct Supabase calls.
+- **Services** hold business logic and orchestration. This is the unit-test boundary — test services the way you'd test any other function with business logic, mocking the resource layer.
+- **Resources** are pure data access and the only place `supabase.from(...)` is called.
+- **Models** hold domain types shared across the other three layers (e.g. a `Trip` type derived from the generated `Database` type).
+- Use `protectedProcedure` (defined in `trpc.ts`) for anything that requires an authenticated user — it throws `TRPCError({ code: "UNAUTHORIZED" })` when there's no session, mirroring the existing `getClaims()` check used by `/editor` and the proxy.
+- The tRPC HTTP handler lives at `app/api/trpc/[trpc]/route.ts`.
+
+### Database types
+
+`npm run db:types` regenerates `lib/supabase/database.types.ts` from the live Supabase schema. Run it after any migration. The Supabase clients in `lib/supabase/` are generic over this `Database` type — don't bypass that typing with casts.
+
+### Frontend API proxy
+
+Each backend router gets a matching folder under `lib/api/<feature>/` (e.g. `server/trpc/routers/trips.ts` ↔ `lib/api/trips/`) exposing a thin React Query hook (e.g. `useTrips()`), barrel-exported via `index.ts`. Components call `useTrips()` from `@/lib/api/trips`, never the raw `trpc` client directly.
+
+There is no separate fetch-logic file in these folders: `trpc.<feature>.<procedure>.useQuery()`/`useMutation()` already is the fetch layer (request, cache key, retries, types all handled by the tRPC React Query link). The hook only exists to keep that abstraction swappable from the rest of the app.

@@ -22,6 +22,21 @@ if (typeof window !== "undefined") {
       disconnect() {}
     };
   }
+  // jsdom has no matchMedia, but the sidebar's mobile-breakpoint hook
+  // (hooks/use-mobile.ts) calls it on mount.
+  if (!window.matchMedia) {
+    window.matchMedia = (query: string) =>
+      ({
+        matches: false,
+        media: query,
+        onchange: null,
+        addListener: () => {},
+        removeListener: () => {},
+        addEventListener: () => {},
+        removeEventListener: () => {},
+        dispatchEvent: () => false,
+      }) as unknown as MediaQueryList;
+  }
   // jsdom has no PointerEvent constructor, so fireEvent.pointerDown/Move/Up
   // dispatch a plain Event with clientX/pointerId silently dropped.
   if (!window.PointerEvent) {

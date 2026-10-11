@@ -23,7 +23,7 @@ npm test       # Jest
 
 ## Key paths
 
-- `app/` — routes: public home, `/auth/*`, `/protected`
+- `app/` — routes: public home, `/auth/*`, `/editor` (auth-gated)
 - `components/` — app UI; `components/ui/` — shadcn primitives
 - `lib/supabase/` — Supabase clients and session proxy
 - `lib/utils.ts` — shared helpers (including env-var checks)
@@ -33,11 +33,7 @@ npm test       # Jest
 
 Do not hoist `createClient()` to a module-level singleton. Create a new client inside each function (Fluid compute).
 
-`/protected` loads claims with `supabase.auth.getClaims()` and redirects to `/auth/login` when unauthenticated.
-
-## Starter vs conventions
-
-Existing UI is still flat starter files (for example `components/auth-button.tsx`). New components should use the folder layout in [CONVENTIONS.md](CONVENTIONS.md). Do not mass-refactor the starter unless asked.
+`/editor` loads claims with `supabase.auth.getClaims()` and redirects to `/auth/login` when unauthenticated.
 
 ## Testing
 

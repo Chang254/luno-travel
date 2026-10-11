@@ -1,16 +1,19 @@
 import type { Metadata } from "next";
 import { Cinzel, Geist } from "next/font/google";
 import { ThemeProvider } from "next-themes";
-import AppSidebar from "@/components/AppSidebar";
+import AppSidebar, { AppSidebarAccount } from "@/components/AppSidebar";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
+import TRPCProvider from "@/lib/trpc/Provider";
+import { createClient } from "@/lib/supabase/server";
+import { getBaseUrl } from "@/lib/utils";
 import "./globals.css";
 
-const defaultUrl = process.env.VERCEL_URL
-  ? `https://${process.env.VERCEL_URL}`
-  : "http://localhost:3000";
+// Every route's shell depends on auth state (sidebar vs. none), so this
+// layout can't produce a static instant-navigation shell.
+export const instant = false;
 
 export const metadata: Metadata = {
-  metadataBase: new URL(defaultUrl),
+  metadataBase: new URL(getBaseUrl()),
   title: "Luno Travel",
   description: "The luxury travel journal",
 };
@@ -28,11 +31,15 @@ const cinzel = Cinzel({
   weight: ["400", "500", "600", "700"],
 });
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const supabase = await createClient();
+  const { data } = await supabase.auth.getClaims();
+  const user = data?.claims;
+
   return (
     <html
       lang="en"
@@ -40,17 +47,23 @@ export default function RootLayout({
       className={`${geistSans.variable} ${cinzel.variable} h-full`}
     >
       <body className={`${geistSans.className} h-full antialiased`}>
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="light"
-          enableSystem
-          disableTransitionOnChange
-        >
-          <SidebarProvider>
-            <AppSidebar />
-            <SidebarInset>{children}</SidebarInset>
-          </SidebarProvider>
-        </ThemeProvider>
+        <TRPCProvider>
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="light"
+            enableSystem
+            disableTransitionOnChange
+          >
+            {user ? (
+              <SidebarProvider>
+                <AppSidebar footer={<AppSidebarAccount email={user.email} />} />
+                <SidebarInset>{children}</SidebarInset>
+              </SidebarProvider>
+            ) : (
+              children
+            )}
+          </ThemeProvider>
+        </TRPCProvider>
       </body>
     </html>
   );
