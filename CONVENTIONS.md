@@ -8,7 +8,7 @@ Each component should follow the following structure
 
 ```
 -📁 MyComponent
-  -📄 index.ts // Contains default export
+  -📄 index.tsx // Contains default export
   -📄 MyComponent.styles.ts // Contains tailwind strings
   -📄 MyComponent.helpers.tsx // Utils and custom hooks consumed by MyComponent
   -📄 MyComponent.actions.ts // Server Actions consumed by MyComponent
