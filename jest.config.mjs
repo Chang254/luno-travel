@@ -14,6 +14,10 @@ const config = {
   coverageProvider: "v8",
   testEnvironment: "jsdom",
   setupFilesAfterEnv: ["<rootDir>/jest.setup.ts"],
+  // Lets `jest.mock("@/...")` resolve the same tsconfig alias that imports use.
+  moduleNameMapper: {
+    "^@/(.*)$": "<rootDir>/$1",
+  },
 };
 
 // createJestConfig is exported this way to ensure next/jest can load the Next.js config, which is async

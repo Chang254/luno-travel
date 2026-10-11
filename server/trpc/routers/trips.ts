@@ -4,10 +4,12 @@ import {
   getTripsForUser,
   updateTripContentForUser,
 } from "@/server/services/trips.service";
+import { createImageUploadForUser } from "@/server/services/tripImages.service";
 import {
   getTripInputSchema,
   updateTripContentInputSchema,
 } from "@/server/models/trips.types";
+import { createImageUploadInputSchema } from "@/server/models/tripImages.types";
 
 export const tripsRouter = router({
   list: protectedProcedure.query(({ ctx }) => {
@@ -22,5 +24,11 @@ export const tripsRouter = router({
     .input(updateTripContentInputSchema)
     .mutation(({ ctx, input }) => {
       return updateTripContentForUser(ctx.supabase, input.id, ctx.user.sub, input.content);
+    }),
+
+  createImageUpload: protectedProcedure
+    .input(createImageUploadInputSchema)
+    .mutation(({ ctx, input }) => {
+      return createImageUploadForUser(ctx.supabase, input.tripId, ctx.user.sub, input.contentType);
     }),
 });

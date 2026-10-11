@@ -18,7 +18,11 @@ import UnderlineButton from "./UnderlineButton";
 import UndoButton from "./UndoButton";
 import { useSyncEditorSaveState } from "../../EditorSaveStore.helpers";
 
-export default function Toolbar() {
+interface ToolbarProps {
+  tripId?: string;
+}
+
+export default function Toolbar({ tripId }: ToolbarProps) {
   useSyncToolbarState();
   useSyncEditorSaveState();
 
@@ -48,7 +52,7 @@ export default function Toolbar() {
 
       <Divider />
 
-      <InsertDropdown />
+      <InsertDropdown tripId={tripId} />
     </div>
   );
 }

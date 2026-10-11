@@ -69,7 +69,7 @@ export default function LexicalEditor({ tripId, initialContent }: LexicalEditorP
         />
       }
     >
-      <Toolbar />
+      <Toolbar tripId={tripId} />
     </LexicalExtensionComposer>
   );
 }

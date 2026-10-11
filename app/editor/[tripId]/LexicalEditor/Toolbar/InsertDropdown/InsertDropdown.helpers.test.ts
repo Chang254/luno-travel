@@ -7,7 +7,11 @@ import {
 } from "lexical";
 
 import { ImageNode, $isImageNode } from "../../ImageNode";
-import { insertImage } from "./InsertDropdown.helpers";
+import { getAltFromFileName, insertImage } from "./InsertDropdown.helpers";
+
+jest.mock("@/lib/api/trips");
+
+const image = { src: "user-1/trip-1/abc.png", alt: "kyoto" };
 
 /** Mirrors `LexicalEditor.tsx`'s setup (nodes) without React. */
 function createTestEditor(): LexicalEditor {
@@ -39,7 +43,7 @@ describe("insertImage", () => {
     const editor = createTestEditor();
     seedSelectedText(editor, "hello");
 
-    insertImage(editor);
+    insertImage(editor, image);
 
     const { hasText, hasImage } = editor.read(() => {
       const children = $getRoot().getChildren();
@@ -56,12 +60,19 @@ describe("insertImage", () => {
     const editor = createTestEditor();
     seedSelectedText(editor, "hello");
 
-    insertImage(editor);
-    insertImage(editor);
+    insertImage(editor, image);
+    insertImage(editor, image);
 
     const imageCount = editor.read(
       () => $getRoot().getChildren().filter($isImageNode).length,
     );
     expect(imageCount).toBe(2);
+  });
+});
+
+describe("getAltFromFileName", () => {
+  it("strips only the final extension", () => {
+    expect(getAltFromFileName("kyoto.temple.jpg")).toBe("kyoto.temple");
+    expect(getAltFromFileName("no-extension")).toBe("no-extension");
   });
 });
