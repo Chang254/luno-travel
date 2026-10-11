@@ -1,21 +1,15 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback } from "react";
 import {
   $createParagraphNode,
   $getSelection,
   $isRangeSelection,
   $isRootOrShadowRoot,
-  COMMAND_PRIORITY_CRITICAL,
-  SELECTION_CHANGE_COMMAND,
   type LexicalEditor,
   type RangeSelection,
 } from "lexical";
-import {
-  $findMatchingParent,
-  $getNearestNodeOfType,
-  mergeRegister,
-} from "@lexical/utils";
+import { $findMatchingParent, $getNearestNodeOfType } from "@lexical/utils";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
 import {
   $createHeadingNode,
@@ -31,6 +25,8 @@ import {
   REMOVE_LIST_COMMAND,
 } from "@lexical/list";
 import { $setBlocksType } from "@lexical/selection";
+
+import { useToolbarStore } from "../Toolbar.store";
 import {
   Heading1,
   Heading2,
@@ -147,33 +143,10 @@ export function formatBlock(
   });
 }
 
-/** Tracks the selection's block type and exposes the action to change it. */
+/** Reads the selection's block type from the toolbar store and exposes the action to change it. */
 export function useBlockType() {
   const [editor] = useLexicalComposerContext();
-  const [blockType, setBlockType] = useState<BlockType>("paragraph");
-
-  useEffect(() => {
-    const syncState = () => {
-      const selection = $getSelection();
-      if ($isRangeSelection(selection)) {
-        setBlockType(getBlockType(selection));
-      }
-    };
-
-    return mergeRegister(
-      editor.registerUpdateListener(({ editorState }) => {
-        editorState.read(syncState);
-      }),
-      editor.registerCommand(
-        SELECTION_CHANGE_COMMAND,
-        () => {
-          syncState();
-          return false;
-        },
-        COMMAND_PRIORITY_CRITICAL,
-      ),
-    );
-  }, [editor]);
+  const blockType = useToolbarStore((state) => state.blockType);
 
   const setType = useCallback(
     (nextBlockType: BlockType) => {

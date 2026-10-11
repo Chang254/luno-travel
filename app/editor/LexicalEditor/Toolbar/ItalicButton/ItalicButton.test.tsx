@@ -1,12 +1,10 @@
-import { render, screen } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
+import { render, screen } from "@/lib/test-utils";
 
 import LexicalEditor from "../../../LexicalEditor";
 
 describe("ItalicButton", () => {
   it("marks itself pressed once toggled on", async () => {
-    const user = userEvent.setup();
-    render(<LexicalEditor />);
+    const { user } = render(<LexicalEditor />);
 
     const italicButton = screen.getByRole("button", { name: "Italic" });
     expect(italicButton).toHaveAttribute("aria-pressed", "false");

@@ -3,10 +3,11 @@ import type { EditorThemeClasses } from "lexical";
 export const styles = {
   container:
     "relative flex h-full flex-col overflow-hidden bg-white text-foreground",
-  contentEditable:
-    "flex-1 min-h-0 overflow-y-auto resize-none px-4 py-3 text-sm bg-white outline-none",
+  editorScroller: "flex-1 min-h-0 overflow-y-auto",
+  editorInner: "relative",
+  contentEditable: "resize-none py-3 pl-7 pr-4 text-sm bg-white outline-none",
   placeholder:
-    "pointer-events-none absolute left-4 top-3 select-none text-sm text-muted-foreground",
+    "pointer-events-none absolute left-7 top-3 select-none text-sm text-muted-foreground",
 };
 
 /** Maps Lexical's built-in node/format classes to Tailwind strings. */

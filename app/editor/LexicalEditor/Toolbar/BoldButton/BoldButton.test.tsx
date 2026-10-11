@@ -1,12 +1,10 @@
-import { render, screen } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
+import { render, screen } from "@/lib/test-utils";
 
 import LexicalEditor from "../../../LexicalEditor";
 
 describe("BoldButton", () => {
   it("marks itself pressed once toggled on", async () => {
-    const user = userEvent.setup();
-    render(<LexicalEditor />);
+    const { user } = render(<LexicalEditor />);
 
     const boldButton = screen.getByRole("button", { name: "Bold" });
     expect(boldButton).toHaveAttribute("aria-pressed", "false");

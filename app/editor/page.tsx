@@ -3,12 +3,13 @@ import { Suspense } from "react";
 
 import LexicalEditor from './LexicalEditor'
 import { EditorHeader } from "./EditorHeader";
+import { styles } from "./editor.styles";
 
 export default function EditorPage() {
   return (
-    <div className="flex h-full min-h-0 flex-col">
+    <div className={styles.editorContainer}>
       <EditorHeader />
-      <div className="min-h-0 flex-1">
+      <div className={styles.editorContent}>
         <Suspense>
           <LexicalEditor />
         </Suspense>
