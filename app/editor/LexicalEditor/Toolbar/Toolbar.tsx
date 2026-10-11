@@ -7,6 +7,9 @@ import { AlignLeftButton } from "./AlignLeftButton";
 import { AlignRightButton } from "./AlignRightButton";
 import { BlockTypeDropdown } from "./BlockTypeDropdown";
 import { BoldButton } from "./BoldButton";
+import { ColorSelector } from "./ColorSelector";
+import { FontSelector } from "./FontSelector";
+import { InsertDropdown } from "./InsertDropdown";
 import { ItalicButton } from "./ItalicButton";
 import { RedoButton } from "./RedoButton";
 import { useSyncToolbarState } from "./Toolbar.helpers";
@@ -25,12 +28,14 @@ export default function Toolbar() {
       <Divider />
 
       <BlockTypeDropdown />
+      <FontSelector />
 
       <Divider />
 
       <BoldButton />
       <ItalicButton />
       <UnderlineButton />
+      <ColorSelector />
 
       <Divider />
 
@@ -38,6 +43,10 @@ export default function Toolbar() {
       <AlignCenterButton />
       <AlignRightButton />
       <AlignJustifyButton />
+
+      <Divider />
+
+      <InsertDropdown />
     </div>
   );
 }

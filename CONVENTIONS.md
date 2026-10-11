@@ -86,4 +86,9 @@ import { buttonStyle } from './Button.styles';
 
 Avoid writing raw Tailwind class strings directly in className props. Keep styling definitions separate from component markup to maintain consistency and make styles easier to locate and maintain.
 
+## Testing
 
+Tests should mimic real user behavior as closely as possible
+
+• Prefer userEvent over fireEvent: ensures that complete interaction paths (like clicking, typing, or tabbing) fully dispatch all underlying side effects exactly like a human user would experience them.
+• Prioritize Visible Element Selectors: Avoid querying internal component states, test IDs, or strict CSS classes unless absolutely necessary. Instead, query elements based on visible text, labels, accessible roles, or placeholders.

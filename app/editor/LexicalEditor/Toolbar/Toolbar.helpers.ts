@@ -4,6 +4,7 @@ import { useCallback, useEffect } from "react";
 import {
   $getSelection,
   $isElementNode,
+  $isNodeSelection,
   $isRangeSelection,
   COMMAND_PRIORITY_CRITICAL,
   ElementFormatType,
@@ -15,7 +16,10 @@ import {
 import { mergeRegister } from "@lexical/utils";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
 
+import { $isImageNode } from "../ImageNode";
 import { getBlockType } from "./BlockTypeDropdown/BlockTypeDropdown.helpers";
+import { DEFAULT_TEXT_COLOR, getTextColor } from "./ColorSelector/ColorSelector.helpers";
+import { DEFAULT_FONT_FAMILY, getFontFamily } from "./FontSelector/FontSelector.helpers";
 import { useToolbarStore } from "./Toolbar.store";
 
 const TRACKED_TEXT_FORMATS: TextFormatType[] = ["bold", "italic", "underline"];
@@ -28,6 +32,21 @@ export function useSyncToolbarState() {
   useEffect(() => {
     const syncState = () => {
       const selection = $getSelection();
+
+      if ($isNodeSelection(selection)) {
+        const imageNode = selection.getNodes().find($isImageNode);
+        if (imageNode) {
+          setToolbarState({
+            textFormats: {},
+            elementFormat: (imageNode.getAlign() || "left") as ElementFormatType,
+            blockType: "paragraph",
+            fontFamily: DEFAULT_FONT_FAMILY,
+            textColor: DEFAULT_TEXT_COLOR,
+          });
+        }
+        return;
+      }
+
       if (!$isRangeSelection(selection)) {
         return;
       }
@@ -45,6 +64,8 @@ export function useSyncToolbarState() {
         textFormats,
         elementFormat: (targetNode?.getFormatType() || "left") as ElementFormatType,
         blockType: getBlockType(selection),
+        fontFamily: getFontFamily(selection),
+        textColor: getTextColor(selection),
       });
     };
 

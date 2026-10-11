@@ -6,6 +6,9 @@ if (typeof window !== "undefined") {
   if (!window.HTMLElement.prototype.hasPointerCapture) {
     window.HTMLElement.prototype.hasPointerCapture = () => false;
   }
+  if (!window.HTMLElement.prototype.setPointerCapture) {
+    window.HTMLElement.prototype.setPointerCapture = () => {};
+  }
   if (!window.HTMLElement.prototype.releasePointerCapture) {
     window.HTMLElement.prototype.releasePointerCapture = () => {};
   }
@@ -18,5 +21,17 @@ if (typeof window !== "undefined") {
       unobserve() {}
       disconnect() {}
     };
+  }
+  // jsdom has no PointerEvent constructor, so fireEvent.pointerDown/Move/Up
+  // dispatch a plain Event with clientX/pointerId silently dropped.
+  if (!window.PointerEvent) {
+    class PointerEventPolyfill extends MouseEvent {
+      pointerId: number;
+      constructor(type: string, params: PointerEventInit = {}) {
+        super(type, params);
+        this.pointerId = params.pointerId ?? 0;
+      }
+    }
+    window.PointerEvent = PointerEventPolyfill as unknown as typeof PointerEvent;
   }
 }
