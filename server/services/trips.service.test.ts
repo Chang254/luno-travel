@@ -84,8 +84,12 @@ const publishedTrip = {
   title: "Kyoto",
   content: {},
   cover_image_url: null,
+  author_name: "Ada Lovelace",
+  author_avatar_url: "https://example.com/ada.png",
   published_at: "2026-01-02T00:00:00.000Z",
 };
+
+const author = { name: "Ada Lovelace", avatarUrl: "https://example.com/ada.png" };
 
 function contentWithImages(...srcs: string[]) {
   return { root: { type: "root", children: srcs.map((src) => ({ type: "image", src })) } };
@@ -230,7 +234,7 @@ describe("getPublicationForUser", () => {
 });
 
 describe("publishTripForUser", () => {
-  it("snapshots the saved draft's title, content and cover", async () => {
+  it("snapshots the saved draft's title, content, cover and author", async () => {
     const content = contentWithImages("user-1/trip-1/a.png");
     jest
       .mocked(findTripById)
@@ -238,7 +242,7 @@ describe("publishTripForUser", () => {
     jest.mocked(findPublishedTripById).mockResolvedValue(null);
     jest.mocked(upsertPublishedTrip).mockResolvedValue({ ...publishedTrip, content });
 
-    const result = await publishTripForUser(supabase, "trip-1", "user-1");
+    const result = await publishTripForUser(supabase, "trip-1", "user-1", author);
 
     expect(upsertPublishedTrip).toHaveBeenCalledWith(supabase, {
       trip_id: "trip-1",
@@ -246,6 +250,8 @@ describe("publishTripForUser", () => {
       title: "Kyoto",
       content,
       cover_image_url: "user-1/trip-1/cover.png",
+      author_name: "Ada Lovelace",
+      author_avatar_url: "https://example.com/ada.png",
     });
     expect(result).toEqual({ ...publishedTrip, content });
     expect(removeImages).not.toHaveBeenCalled();
@@ -261,7 +267,7 @@ describe("publishTripForUser", () => {
     });
     jest.mocked(upsertPublishedTrip).mockResolvedValue(publishedTrip);
 
-    await publishTripForUser(supabase, "trip-1", "user-1");
+    await publishTripForUser(supabase, "trip-1", "user-1", author);
 
     expect(removeImages).toHaveBeenCalledWith(supabase, ["user-1/trip-1/a.png"]);
   });
@@ -269,7 +275,7 @@ describe("publishTripForUser", () => {
   it("rejects a trip the user doesn't own", async () => {
     jest.mocked(findTripById).mockResolvedValue(null);
 
-    await expect(publishTripForUser(supabase, "trip-1", "user-2")).rejects.toMatchObject({
+    await expect(publishTripForUser(supabase, "trip-1", "user-2", author)).rejects.toMatchObject({
       code: "NOT_FOUND",
     });
     expect(upsertPublishedTrip).not.toHaveBeenCalled();

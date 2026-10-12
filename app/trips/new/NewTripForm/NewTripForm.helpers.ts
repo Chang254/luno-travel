@@ -1,14 +1,21 @@
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useForm, useWatch } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 
 import { useCreateTrip } from "@/lib/api/trips";
-import { IMAGE_EXTENSIONS } from "@/server/models/tripImages.types";
+import { IMAGE_EXTENSIONS, type ImageContentType } from "@/server/models/tripImages.types";
+import { createTripInputSchema } from "@/server/models/trips.types";
 
-export const ACCEPTED_COVER_TYPES = Object.keys(IMAGE_EXTENSIONS).join(",");
+const COVER_TYPES = Object.keys(IMAGE_EXTENSIONS) as ImageContentType[];
 
-export function isAllowedCoverType(file: File): boolean {
-  return file.type in IMAGE_EXTENSIONS;
-}
+export const ACCEPTED_COVER_TYPES = COVER_TYPES.join(",");
+
+/** Reuses the server's title rules so the form trims and validates exactly as `trips.create` will. */
+export const newTripFormSchema = createTripInputSchema.extend({
+  coverImage: z.file().mime(COVER_TYPES, "Choose a JPEG, PNG, GIF, WebP, or AVIF image.").nullable(),
+});
 
 /** Object URL for previewing a local file, revoked when the file changes or the component unmounts. */
 export function useFilePreviewUrl(file: File | null): string | null {
@@ -27,54 +34,29 @@ export function useFilePreviewUrl(file: File | null): string | null {
   return url;
 }
 
-/** State and submit flow for the new-trip form; navigates to the editor once the trip is created. */
+/** Form and submit flow for the new-trip form; navigates to the editor once the trip is created. */
 export function useNewTripForm() {
   const router = useRouter();
   const createTrip = useCreateTrip();
-  const [title, setTitle] = useState("");
-  const [coverImage, setCoverImage] = useState<File | null>(null);
-  const [coverError, setCoverError] = useState<string | null>(null);
-  /** Bumped to remount the file input, since a file input's value can't be cleared through props. */
-  const [coverInputKey, setCoverInputKey] = useState(0);
-  const coverPreviewUrl = useFilePreviewUrl(coverImage);
+  const form = useForm({
+    resolver: zodResolver(newTripFormSchema),
+    mode: "onChange",
+    defaultValues: { title: "", coverImage: null },
+  });
+  const coverImage = useWatch({ control: form.control, name: "coverImage" });
+  /** Parsed synchronously so a rejected file never flashes a preview while async validation runs. */
+  const coverPreviewUrl = useFilePreviewUrl(
+    newTripFormSchema.shape.coverImage.safeParse(coverImage).data ?? null,
+  );
 
-  function selectCover(file: File | undefined) {
-    if (!file) return;
-    if (!isAllowedCoverType(file)) {
-      setCoverImage(null);
-      setCoverError("Choose a JPEG, PNG, GIF, WebP, or AVIF image.");
-      setCoverInputKey((key) => key + 1);
-      return;
-    }
-    setCoverError(null);
-    setCoverImage(file);
-  }
-
-  function removeCover() {
-    setCoverImage(null);
-    setCoverError(null);
-    setCoverInputKey((key) => key + 1);
-  }
-
-  function submit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    createTrip.mutate(
-      { title: title.trim(), coverImage },
-      { onSuccess: (trip) => router.push(`/editor/${trip.id}`) },
-    );
-  }
+  const onSubmit = form.handleSubmit((values) => {
+    createTrip.mutate(values, { onSuccess: (trip) => router.push(`/editor/${trip.id}`) });
+  });
 
   return {
-    title,
-    setTitle,
-    coverImage,
-    coverError,
-    coverInputKey,
+    form,
+    onSubmit,
     coverPreviewUrl,
-    selectCover,
-    removeCover,
-    submit,
-    canSubmit: title.trim().length > 0 && !createTrip.isPending,
     isPending: createTrip.isPending,
     isError: createTrip.isError,
   };

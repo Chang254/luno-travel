@@ -4,7 +4,6 @@ import { cache, Suspense } from "react";
 
 import TripLoading from "@/components/TripLoading";
 import { createClient } from "@/lib/supabase/server";
-import { getTripImageUrl } from "@/lib/supabase/storage";
 import { getPublishedTrip } from "@/server/services/trips.service";
 
 import TripReader from "./TripReader";
@@ -26,8 +25,8 @@ export async function generateMetadata({ params }: TripPageProps): Promise<Metad
 
   if (!trip) return {};
 
-  const images = trip.cover_image_url ? [getTripImageUrl(trip.cover_image_url)] : undefined;
-  return { title: trip.title, openGraph: { title: trip.title, images } };
+  // The share image comes from ./opengraph-image.tsx.
+  return { title: trip.title, openGraph: { title: trip.title } };
 }
 
 async function PublishedTrip({ params }: TripPageProps) {

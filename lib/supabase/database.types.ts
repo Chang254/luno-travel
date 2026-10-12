@@ -16,6 +16,8 @@ export type Database = {
     Tables: {
       published_trips: {
         Row: {
+          author_avatar_url: string | null
+          author_name: string | null
           content: Json
           cover_image_url: string | null
           owner_id: string
@@ -24,6 +26,8 @@ export type Database = {
           trip_id: string
         }
         Insert: {
+          author_avatar_url?: string | null
+          author_name?: string | null
           content: Json
           cover_image_url?: string | null
           owner_id: string
@@ -32,6 +36,8 @@ export type Database = {
           trip_id: string
         }
         Update: {
+          author_avatar_url?: string | null
+          author_name?: string | null
           content?: Json
           cover_image_url?: string | null
           owner_id?: string

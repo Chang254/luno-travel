@@ -1,3 +1,4 @@
+import { getUserProfile } from "@/lib/auth/userProfile";
 import { protectedProcedure, publicProcedure, router } from "@/server/trpc/trpc";
 import {
   createTripForUser,
@@ -53,7 +54,7 @@ export const tripsRouter = router({
   }),
 
   publish: protectedProcedure.input(getTripInputSchema).mutation(({ ctx, input }) => {
-    return publishTripForUser(ctx.supabase, input.id, ctx.user.sub);
+    return publishTripForUser(ctx.supabase, input.id, ctx.user.sub, getUserProfile(ctx.user));
   }),
 
   unpublish: protectedProcedure.input(getTripInputSchema).mutation(({ ctx, input }) => {

@@ -4,6 +4,7 @@ import { ThemeProvider } from "next-themes";
 import AppSidebar, { AppSidebarAccount } from "@/components/AppSidebar";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import TRPCProvider from "@/lib/trpc/Provider";
+import { getUserProfile } from "@/lib/auth/userProfile";
 import { createClient } from "@/lib/supabase/server";
 import { getBaseUrl } from "@/lib/utils";
 import "./globals.css";
@@ -56,7 +57,7 @@ export default async function RootLayout({
           >
             {user ? (
               <SidebarProvider>
-                <AppSidebar footer={<AppSidebarAccount email={user.email} />} />
+                <AppSidebar footer={<AppSidebarAccount {...getUserProfile(user)} />} />
                 <SidebarInset>{children}</SidebarInset>
               </SidebarProvider>
             ) : (

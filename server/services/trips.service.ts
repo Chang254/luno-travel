@@ -1,6 +1,7 @@
 import { TRPCError } from "@trpc/server";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/supabase/database.types";
+import type { UserProfile } from "@/lib/auth/userProfile";
 import type { PublishedTrip } from "@/server/models/publishedTrips.types";
 import type { Trip } from "@/server/models/trips.types";
 import {
@@ -117,12 +118,15 @@ export async function getPublicationForUser(
 
 /**
  * Copies the saved draft into the public snapshot, replacing any previous
- * one. Images only the old snapshot referenced are then removed.
+ * one. The author's name and avatar are snapshotted too, since anonymous
+ * readers can't look up the owner. Images only the old snapshot referenced
+ * are then removed.
  */
 export async function publishTripForUser(
   supabase: SupabaseClient<Database>,
   id: string,
   ownerId: string,
+  author: UserProfile,
 ): Promise<PublishedTrip> {
   const trip = await findTripById(supabase, id, ownerId);
   if (!trip) {
@@ -136,6 +140,8 @@ export async function publishTripForUser(
     title: trip.title,
     content: trip.content,
     cover_image_url: trip.cover_image_url,
+    author_name: author.name,
+    author_avatar_url: author.avatarUrl,
   });
 
   await removeUnreferencedImages(
