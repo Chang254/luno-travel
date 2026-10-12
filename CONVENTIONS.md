@@ -2,6 +2,20 @@
 
 This document contains the patterns and practices that should be followed when contributing code
 
+## Table of Contents
+
+- [General](#general)
+  - [Typing](#typing)
+- [Frontend](#frontend)
+  - [Folder Structure](#folder-structure)
+  - [Styles](#styles)
+  - [Testing](#testing)
+- [Backend](#backend)
+  - [API layer (tRPC)](#api-layer-trpc)
+  - [Database migrations](#database-migrations)
+  - [Database types](#database-types)
+  - [Frontend API proxy](#frontend-api-proxy)
+
 ## General
 
 ### Typing
