@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 
 import { SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar";
 import { useTrips } from "@/lib/api/trips";
+import TripLink from "./TripLink";
 import { styles } from "./TripsMenu.styles";
 
 export default function TripsMenu() {
@@ -50,7 +51,7 @@ export default function TripsMenu() {
           <SidebarMenuItem key={trip.id}>
             <SidebarMenuButton asChild isActive={pathname === href} tooltip={trip.title}>
               <Link href={href}>
-                <span>{trip.title}</span>
+                <TripLink title={trip.title} />
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>

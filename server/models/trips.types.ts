@@ -15,3 +15,13 @@ export const updateTripContentInputSchema = z.object({
   id: z.string(),
   content: z.record(z.string(), z.any()),
 });
+
+export const createTripInputSchema = z.object({
+  title: z.string().trim().min(1).max(200),
+});
+
+export const updateTripCoverInputSchema = z.object({
+  id: z.string(),
+  /** Object path in the trip images bucket, as returned by `createImageUpload`. */
+  coverImagePath: z.string(),
+});

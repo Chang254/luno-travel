@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getTripForUser } from "@/server/services/trips.service";
 
 import EditorHeader from "./EditorHeader";
+import EditorLoading from "./EditorLoading";
 import LexicalEditor from "./LexicalEditor";
 import { styles } from "./editor.styles";
 
@@ -44,7 +45,7 @@ interface EditorPageProps {
 export default function EditorPage({ params }: EditorPageProps) {
   return (
     <div className={styles.editorContainer}>
-      <Suspense>
+      <Suspense fallback={<EditorLoading />}>
         <AuthenticatedEditor params={params} />
       </Suspense>
     </div>

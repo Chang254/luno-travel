@@ -8,6 +8,7 @@ This document contains the patterns and practices that should be followed when c
   - [Typing](#typing)
 - [Frontend](#frontend)
   - [Folder Structure](#folder-structure)
+  - [Shared UI components](#shared-ui-components)
   - [Styles](#styles)
   - [Testing](#testing)
 - [Backend](#backend)
@@ -108,6 +109,19 @@ If a component is a shared child of two components, it should live next to both 
 
 Shared utils, components, and actions should live at the appropriate root level folder (e.g /components)
 
+### Shared UI components
+
+Before building a new shared or primitive component (spinner, dialog, select, tabs, etc.), check [shadcn/ui](https://ui.shadcn.com/docs/components) for an equivalent and add it with the CLI:
+
+```
+npx shadcn@latest add <component>   // writes to components/ui/<component>.tsx
+```
+
+- Compose app components from the primitives in `components/ui/` rather than re-implementing them.
+- Treat `components/ui/*` as generated code: don't restyle or change behavior there beyond theming — wrap the primitive in an app component instead.
+- Review what the CLI changed before committing (generated imports and any dependencies it adds to `package.json`).
+- Only hand-roll a primitive when shadcn/ui has no equivalent.
+
 ### Styles
 
 Tailwind CSS Styling Conventions
@@ -188,6 +202,6 @@ If a change was made in the dashboard anyway, capture it with `npx supabase db p
 
 ### Frontend API proxy
 
-Each backend router gets a matching folder under `lib/api/<feature>/` (e.g. `server/trpc/routers/trips.ts` ↔ `lib/api/trips/`) exposing a thin React Query hook (e.g. `useTrips()`), barrel-exported via `index.ts`. Components call `useTrips()` from `@/lib/api/trips`, never the raw `trpc` client directly.
+Each backend router gets a matching folder under `lib/api/<feature>/` (e.g. `server/trpc/routers/trips.ts` ↔ `lib/api/trips/`) exposing a thin React Query hook (e.g. `useTrips()`), barrel-exported via `index.ts`. Each hook lives in its own folder (`lib/api/trips/useTrips/useTrips.ts` + `index.ts` re-exporting the named hook), and the feature-level `index.ts` re-exports from those folders. Components call `useTrips()` from `@/lib/api/trips`, never the raw `trpc` client directly.
 
 There is no separate fetch-logic file in these folders: `trpc.<feature>.<procedure>.useQuery()`/`useMutation()` already is the fetch layer (request, cache key, retries, types all handled by the tRPC React Query link). The hook only exists to keep that abstraction swappable from the rest of the app.

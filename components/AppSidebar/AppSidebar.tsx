@@ -1,6 +1,8 @@
 "use client";
 
 import type { ReactNode } from "react";
+import Link from "next/link";
+import { Plus } from "lucide-react";
 
 import LunoLogo from "@/components/LunoLogo";
 import {
@@ -8,6 +10,7 @@ import {
   SidebarContent,
   SidebarFooter,
   SidebarGroup,
+  SidebarGroupAction,
   SidebarGroupContent,
   SidebarGroupLabel,
   SidebarHeader,
@@ -36,6 +39,11 @@ export default function AppSidebar({ footer }: AppSidebarProps) {
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupLabel>Trips</SidebarGroupLabel>
+          <SidebarGroupAction asChild title="New trip">
+            <Link href="/trips/new" aria-label="New trip">
+              <Plus />
+            </Link>
+          </SidebarGroupAction>
           <SidebarGroupContent>
             <SidebarMenu>
               <TripsMenu />

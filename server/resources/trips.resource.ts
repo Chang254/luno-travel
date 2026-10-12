@@ -49,3 +49,36 @@ export async function updateTripContent(
   if (error) throw error;
   return data;
 }
+
+export async function insertTrip(
+  supabase: SupabaseClient<Database>,
+  ownerId: string,
+  title: string,
+): Promise<Trip> {
+  const { data, error } = await supabase
+    .from("trips")
+    .insert({ owner_id: ownerId, title })
+    .select("*")
+    .single();
+
+  if (error) throw error;
+  return data;
+}
+
+export async function updateTripCover(
+  supabase: SupabaseClient<Database>,
+  id: string,
+  ownerId: string,
+  coverImagePath: string,
+): Promise<Trip> {
+  const { data, error } = await supabase
+    .from("trips")
+    .update({ cover_image_url: coverImagePath })
+    .eq("id", id)
+    .eq("owner_id", ownerId)
+    .select("*")
+    .single();
+
+  if (error) throw error;
+  return data;
+}

@@ -1,3 +1,4 @@
+import { TRPCError } from "@trpc/server";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/supabase/database.types";
 import type { Trip } from "@/server/models/trips.types";
@@ -5,9 +6,11 @@ import { removeImages } from "@/server/resources/tripImages.resource";
 import {
   findTripById,
   findTripsByOwnerId,
+  insertTrip,
   updateTripContent,
+  updateTripCover,
 } from "@/server/resources/trips.resource";
-import { getRemovedImagePaths } from "@/server/services/tripImages.service";
+import { getRemovedImagePaths, getTripImageFolder } from "@/server/services/tripImages.service";
 
 export async function getTripsForUser(
   supabase: SupabaseClient<Database>,
@@ -22,6 +25,32 @@ export async function getTripForUser(
   ownerId: string,
 ): Promise<Trip | null> {
   return findTripById(supabase, id, ownerId);
+}
+
+export async function createTripForUser(
+  supabase: SupabaseClient<Database>,
+  ownerId: string,
+  title: string,
+): Promise<Trip> {
+  return insertTrip(supabase, ownerId, title);
+}
+
+/**
+ * Sets the cover to an uploaded object path. The path must sit in this trip's
+ * image folder so a client can't point the cover at another user's object.
+ */
+export async function updateTripCoverForUser(
+  supabase: SupabaseClient<Database>,
+  id: string,
+  ownerId: string,
+  coverImagePath: string,
+): Promise<Trip> {
+  const folder = getTripImageFolder(ownerId, id);
+  if (!coverImagePath.startsWith(folder) || coverImagePath.includes("..")) {
+    throw new TRPCError({ code: "BAD_REQUEST", message: "Invalid cover image path" });
+  }
+
+  return updateTripCover(supabase, id, ownerId, coverImagePath);
 }
 
 /**

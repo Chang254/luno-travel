@@ -1,13 +1,17 @@
 import {
   findTripById,
   findTripsByOwnerId,
+  insertTrip,
   updateTripContent,
+  updateTripCover,
 } from "../resources/trips.resource";
 import { removeImages } from "../resources/tripImages.resource";
 import {
+  createTripForUser,
   getTripForUser,
   getTripsForUser,
   updateTripContentForUser,
+  updateTripCoverForUser,
 } from "./trips.service";
 
 jest.mock("../resources/trips.resource");
@@ -137,5 +141,39 @@ describe("updateTripContentForUser", () => {
     await expect(updateTripContentForUser(supabase, "trip-1", "user-1", next)).resolves.toEqual(
       updatedTrip,
     );
+  });
+});
+
+describe("createTripForUser", () => {
+  it("inserts a trip owned by the given user with the given title", async () => {
+    jest.mocked(insertTrip).mockResolvedValue(trip);
+
+    const result = await createTripForUser(supabase, "user-1", "Kyoto");
+
+    expect(insertTrip).toHaveBeenCalledWith(supabase, "user-1", "Kyoto");
+    expect(result).toEqual(trip);
+  });
+});
+
+describe("updateTripCoverForUser", () => {
+  it("sets the cover when the path is inside the trip's image folder", async () => {
+    const updatedTrip = { ...trip, cover_image_url: "user-1/trip-1/cover.png" };
+    jest.mocked(updateTripCover).mockResolvedValue(updatedTrip);
+
+    const result = await updateTripCoverForUser(supabase, "trip-1", "user-1", "user-1/trip-1/cover.png");
+
+    expect(updateTripCover).toHaveBeenCalledWith(supabase, "trip-1", "user-1", "user-1/trip-1/cover.png");
+    expect(result).toEqual(updatedTrip);
+  });
+
+  it.each([
+    ["another user's folder", "user-2/trip-1/cover.png"],
+    ["another trip's folder", "user-1/trip-2/cover.png"],
+    ["a path that escapes the folder", "user-1/trip-1/../../user-2/trip-9/cover.png"],
+  ])("rejects a path in %s", async (_, path) => {
+    await expect(updateTripCoverForUser(supabase, "trip-1", "user-1", path)).rejects.toMatchObject({
+      code: "BAD_REQUEST",
+    });
+    expect(updateTripCover).not.toHaveBeenCalled();
   });
 });
