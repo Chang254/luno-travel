@@ -16,7 +16,7 @@ import {
 import { mergeRegister } from "@lexical/utils";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
 
-import { $isImageNode } from "../ImageNode";
+import { $isImageNode } from "@/components/ImageNode";
 import { getBlockType } from "./BlockTypeDropdown/BlockTypeDropdown.helpers";
 import { DEFAULT_TEXT_COLOR, getTextColor } from "./ColorSelector/ColorSelector.helpers";
 import { DEFAULT_FONT_FAMILY, getFontFamily } from "./FontSelector/FontSelector.helpers";

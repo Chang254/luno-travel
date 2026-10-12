@@ -9,15 +9,13 @@ import {
   type EditorChildrenComponentProps,
 } from "@lexical/react/ReactExtension";
 
+import { editorConfig, getInitialEditorState } from "@/lib/lexical/tripContent";
+import { tripContentStyles } from "@/lib/lexical/tripContent.styles";
 import type { Trip } from "@/server/models/trips.types";
 
 import Toolbar from "./Toolbar";
 import DraggableBlockPlugin from "./DraggableBlockPlugin";
-import {
-  editorConfig,
-  editorExtensionDependencies,
-  getInitialEditorState,
-} from "./LexicalEditor.helpers";
+import { editorExtensionDependencies } from "./LexicalEditor.helpers";
 import { styles } from "./LexicalEditor.styles";
 
 /** Renders the toolbar above the content-editable surface */
@@ -64,9 +62,7 @@ export default function LexicalEditor({ tripId, initialContent }: LexicalEditorP
       key={tripId}
       extension={editorExtension}
       contentEditable={
-        <ContentEditable
-          className={styles.contentEditable}
-        />
+        <ContentEditable className={tripContentStyles.surface} />
       }
     >
       <Toolbar tripId={tripId} />

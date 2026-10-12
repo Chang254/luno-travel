@@ -1,7 +1,7 @@
 import { render, screen } from "@/lib/test-utils";
 import { useUploadTripImage } from "@/lib/api/trips";
 
-import LexicalEditor from "../LexicalEditor";
+import LexicalEditor from "@/app/editor/[tripId]/LexicalEditor";
 
 jest.mock("@/lib/api/trips");
 

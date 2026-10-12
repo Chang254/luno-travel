@@ -1,5 +1,6 @@
 "use client";
 
+import { useLexicalEditable } from "@lexical/react/useLexicalEditable";
 import { useLexicalNodeSelection } from "@lexical/react/useLexicalNodeSelection";
 import type { ElementFormatType, NodeKey } from "lexical";
 
@@ -19,6 +20,7 @@ interface ImageComponentProps {
 }
 
 export default function ImageComponent({ nodeKey, src, alt, width, align }: ImageComponentProps) {
+  const isEditable = useLexicalEditable();
   const [isSelected] = useLexicalNodeSelection(nodeKey);
   const { displayWidth, onResizeStart, onResizeMove, onResizeEnd } = useResizableWidth(
     nodeKey,
@@ -27,7 +29,7 @@ export default function ImageComponent({ nodeKey, src, alt, width, align }: Imag
 
   return (
     <div style={{ textAlign: align || "left" }}>
-      <div className={cn(styles.wrapper, isSelected && styles.selected)}>
+      <div className={cn(styles.wrapper, isEditable && isSelected && styles.selected)}>
         {/* eslint-disable-next-line @next/next/no-img-element -- width is user-resized inline, next/image needs fixed dimensions */}
         <img
           src={getTripImageUrl(src)}
@@ -35,14 +37,16 @@ export default function ImageComponent({ nodeKey, src, alt, width, align }: Imag
           className={styles.image}
           style={{ width: displayWidth, height: "auto" }}
         />
-        <div
-          aria-hidden="true"
-          title="Drag to resize"
-          className={styles.resizeHandle}
-          onPointerDown={onResizeStart}
-          onPointerMove={onResizeMove}
-          onPointerUp={onResizeEnd}
-        />
+        {isEditable && (
+          <div
+            aria-hidden="true"
+            title="Drag to resize"
+            className={styles.resizeHandle}
+            onPointerDown={onResizeStart}
+            onPointerMove={onResizeMove}
+            onPointerUp={onResizeEnd}
+          />
+        )}
       </div>
     </div>
   );

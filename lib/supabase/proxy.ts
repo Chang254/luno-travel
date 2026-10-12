@@ -4,7 +4,8 @@ import type { Database } from "@/lib/supabase/database.types";
 import { hasEnvVars } from "../utils";
 
 // Only redirect if the user is trying to access a protected route
-const isProtectedRoute = (pathname: string) => pathname.startsWith("/editor");
+const isProtectedRoute = (pathname: string) =>
+  pathname.startsWith("/editor") || /^\/trips\/[^/]+\/preview/.test(pathname);
 
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({

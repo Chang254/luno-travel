@@ -77,6 +77,18 @@ describe("extractImagePaths", () => {
 });
 
 describe("getRemovedImagePaths", () => {
+  it("keeps paths still referenced by retained content", () => {
+    const removed = getRemovedImagePaths(
+      contentWithImages("user-1/trip-1/a.png", "user-1/trip-1/b.png"),
+      contentWithImages(),
+      "user-1",
+      "trip-1",
+      [contentWithImages("user-1/trip-1/a.png"), undefined],
+    );
+
+    expect(removed).toEqual(["user-1/trip-1/b.png"]);
+  });
+
   it("returns paths present before but not after", () => {
     const removed = getRemovedImagePaths(
       contentWithImages("user-1/trip-1/a.png", "user-1/trip-1/b.png"),

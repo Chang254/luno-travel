@@ -1,8 +1,12 @@
-import { protectedProcedure, router } from "@/server/trpc/trpc";
+import { protectedProcedure, publicProcedure, router } from "@/server/trpc/trpc";
 import {
   createTripForUser,
+  getPublicationForUser,
+  getPublishedTrip,
   getTripForUser,
   getTripsForUser,
+  publishTripForUser,
+  unpublishTripForUser,
   updateTripContentForUser,
   updateTripCoverForUser,
 } from "@/server/services/trips.service";
@@ -39,6 +43,22 @@ export const tripsRouter = router({
     .mutation(({ ctx, input }) => {
       return updateTripContentForUser(ctx.supabase, input.id, ctx.user.sub, input.content);
     }),
+
+  getPublication: protectedProcedure.input(getTripInputSchema).query(({ ctx, input }) => {
+    return getPublicationForUser(ctx.supabase, input.id, ctx.user.sub);
+  }),
+
+  getPublished: publicProcedure.input(getTripInputSchema).query(({ ctx, input }) => {
+    return getPublishedTrip(ctx.supabase, input.id);
+  }),
+
+  publish: protectedProcedure.input(getTripInputSchema).mutation(({ ctx, input }) => {
+    return publishTripForUser(ctx.supabase, input.id, ctx.user.sub);
+  }),
+
+  unpublish: protectedProcedure.input(getTripInputSchema).mutation(({ ctx, input }) => {
+    return unpublishTripForUser(ctx.supabase, input.id, ctx.user.sub);
+  }),
 
   createImageUpload: protectedProcedure
     .input(createImageUploadInputSchema)

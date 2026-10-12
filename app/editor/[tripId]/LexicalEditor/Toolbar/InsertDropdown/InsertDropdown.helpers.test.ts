@@ -6,7 +6,7 @@ import {
   type LexicalEditor,
 } from "lexical";
 
-import { ImageNode, $isImageNode } from "../../ImageNode";
+import { ImageNode, $isImageNode } from "@/components/ImageNode";
 import { getAltFromFileName, insertImage } from "./InsertDropdown.helpers";
 
 jest.mock("@/lib/api/trips");

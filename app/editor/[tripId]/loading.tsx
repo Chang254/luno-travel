@@ -1,5 +1,5 @@
-import EditorLoading from "./EditorLoading";
+import TripLoading from "@/components/TripLoading";
 
 export default function Loading() {
-  return <EditorLoading />;
+  return <TripLoading />;
 }

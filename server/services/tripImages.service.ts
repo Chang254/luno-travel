@@ -53,19 +53,23 @@ export function extractImagePaths(content: Trip["content"] | undefined): Set<str
 }
 
 /**
- * Image paths referenced by `previous` but not `next`, limited to this trip's
- * folder so crafted content can't target other users' or trips' objects.
+ * Image paths referenced by `previous` but not `next` (nor any `retained`
+ * content, e.g. the published snapshot), limited to this trip's folder so
+ * crafted content can't target other users' or trips' objects.
  */
 export function getRemovedImagePaths(
   previous: Trip["content"] | undefined,
   next: Trip["content"],
   ownerId: string,
   tripId: string,
+  retained: (Trip["content"] | undefined)[] = [],
 ): string[] {
   const folder = getTripImageFolder(ownerId, tripId);
-  const nextPaths = extractImagePaths(next);
+  const keptPaths = new Set(
+    [next, ...retained].flatMap((content) => [...extractImagePaths(content)]),
+  );
 
   return [...extractImagePaths(previous)].filter(
-    (path) => path.startsWith(folder) && !path.includes("..") && !nextPaths.has(path),
+    (path) => path.startsWith(folder) && !path.includes("..") && !keptPaths.has(path),
   );
 }

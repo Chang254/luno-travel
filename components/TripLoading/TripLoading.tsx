@@ -1,8 +1,8 @@
 import { Spinner } from "@/components/ui/spinner";
 
-import { styles } from "./EditorLoading.styles";
+import { styles } from "./TripLoading.styles";
 
-export default function EditorLoading() {
+export default function TripLoading() {
   return (
     <div className={styles.container}>
       <Spinner className={styles.spinner} />

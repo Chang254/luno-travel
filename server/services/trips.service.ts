@@ -1,7 +1,13 @@
 import { TRPCError } from "@trpc/server";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/supabase/database.types";
+import type { PublishedTrip } from "@/server/models/publishedTrips.types";
 import type { Trip } from "@/server/models/trips.types";
+import {
+  deletePublishedTrip,
+  findPublishedTripById,
+  upsertPublishedTrip,
+} from "@/server/resources/publishedTrips.resource";
 import { removeImages } from "@/server/resources/tripImages.resource";
 import {
   findTripById,
@@ -54,10 +60,24 @@ export async function updateTripCoverForUser(
 }
 
 /**
+ * Deletes storage objects no longer referenced anywhere. Runs only after the
+ * write it follows has committed, and its failure is logged rather than
+ * thrown: the write already succeeded and a leftover object is harmless.
+ */
+async function removeUnreferencedImages(supabase: SupabaseClient<Database>, paths: string[]) {
+  if (paths.length === 0) return;
+
+  try {
+    await removeImages(supabase, paths);
+  } catch (error) {
+    console.error("Failed to remove deleted trip images", error);
+  }
+}
+
+/**
  * Saves the content, then deletes storage objects for images the save
- * dropped. Cleanup runs only after the save commits (deletes in the editor are
- * undoable until then) and its failure is logged rather than thrown: the save
- * already succeeded and a leftover object is harmless.
+ * dropped (deletes in the editor are undoable until the save). Images the
+ * published snapshot still shows are kept so the public page doesn't break.
  */
 export async function updateTripContentForUser(
   supabase: SupabaseClient<Database>,
@@ -67,15 +87,79 @@ export async function updateTripContentForUser(
 ): Promise<Trip> {
   const previous = await findTripById(supabase, id, ownerId);
   const trip = await updateTripContent(supabase, id, ownerId, content);
+  const published = await findPublishedTripById(supabase, id);
 
-  const removedPaths = getRemovedImagePaths(previous?.content, content, ownerId, id);
-  if (removedPaths.length > 0) {
-    try {
-      await removeImages(supabase, removedPaths);
-    } catch (error) {
-      console.error("Failed to remove deleted trip images", error);
-    }
-  }
+  await removeUnreferencedImages(
+    supabase,
+    getRemovedImagePaths(previous?.content, content, ownerId, id, [published?.content]),
+  );
 
   return trip;
+}
+
+/** Public read of a trip's published snapshot; never exposes the draft. */
+export async function getPublishedTrip(
+  supabase: SupabaseClient<Database>,
+  id: string,
+): Promise<PublishedTrip | null> {
+  return findPublishedTripById(supabase, id);
+}
+
+/** The owner's view of whether (and when) their trip is published. */
+export async function getPublicationForUser(
+  supabase: SupabaseClient<Database>,
+  id: string,
+  ownerId: string,
+): Promise<PublishedTrip | null> {
+  const published = await findPublishedTripById(supabase, id);
+  return published?.owner_id === ownerId ? published : null;
+}
+
+/**
+ * Copies the saved draft into the public snapshot, replacing any previous
+ * one. Images only the old snapshot referenced are then removed.
+ */
+export async function publishTripForUser(
+  supabase: SupabaseClient<Database>,
+  id: string,
+  ownerId: string,
+): Promise<PublishedTrip> {
+  const trip = await findTripById(supabase, id, ownerId);
+  if (!trip) {
+    throw new TRPCError({ code: "NOT_FOUND" });
+  }
+
+  const previous = await findPublishedTripById(supabase, id);
+  const published = await upsertPublishedTrip(supabase, {
+    trip_id: trip.id,
+    owner_id: ownerId,
+    title: trip.title,
+    content: trip.content,
+    cover_image_url: trip.cover_image_url,
+  });
+
+  await removeUnreferencedImages(
+    supabase,
+    getRemovedImagePaths(previous?.content, trip.content, ownerId, id),
+  );
+
+  return published;
+}
+
+/** Removes the public snapshot, then any images only it referenced. */
+export async function unpublishTripForUser(
+  supabase: SupabaseClient<Database>,
+  id: string,
+  ownerId: string,
+): Promise<void> {
+  const previous = await findPublishedTripById(supabase, id);
+  await deletePublishedTrip(supabase, id, ownerId);
+
+  const trip = await findTripById(supabase, id, ownerId);
+  if (!previous || !trip) return;
+
+  await removeUnreferencedImages(
+    supabase,
+    getRemovedImagePaths(previous.content, trip.content, ownerId, id),
+  );
 }

@@ -2,10 +2,10 @@ import { notFound, redirect } from "next/navigation";
 import { Suspense } from "react";
 
 import { createClient } from "@/lib/supabase/server";
-import { getTripForUser } from "@/server/services/trips.service";
+import { getPublicationForUser, getTripForUser } from "@/server/services/trips.service";
 
 import EditorHeader from "./EditorHeader";
-import EditorLoading from "./EditorLoading";
+import TripLoading from "@/components/TripLoading";
 import LexicalEditor from "./LexicalEditor";
 import { styles } from "./editor.styles";
 
@@ -22,7 +22,10 @@ async function AuthenticatedEditor({ params }: AuthenticatedEditorProps) {
     redirect("/auth/login");
   }
 
-  const trip = await getTripForUser(supabase, tripId, data.claims.sub);
+  const [trip, publication] = await Promise.all([
+    getTripForUser(supabase, tripId, data.claims.sub),
+    getPublicationForUser(supabase, tripId, data.claims.sub),
+  ]);
 
   if (!trip) {
     notFound();
@@ -30,7 +33,7 @@ async function AuthenticatedEditor({ params }: AuthenticatedEditorProps) {
 
   return (
     <>
-      <EditorHeader title={trip.title} tripId={trip.id} />
+      <EditorHeader title={trip.title} tripId={trip.id} isPublished={publication !== null} />
       <div className={styles.editorContent}>
         <LexicalEditor tripId={trip.id} initialContent={trip.content} />
       </div>
@@ -45,7 +48,7 @@ interface EditorPageProps {
 export default function EditorPage({ params }: EditorPageProps) {
   return (
     <div className={styles.editorContainer}>
-      <Suspense fallback={<EditorLoading />}>
+      <Suspense fallback={<TripLoading />}>
         <AuthenticatedEditor params={params} />
       </Suspense>
     </div>

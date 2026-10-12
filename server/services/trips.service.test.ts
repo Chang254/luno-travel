@@ -5,16 +5,25 @@ import {
   updateTripContent,
   updateTripCover,
 } from "../resources/trips.resource";
+import {
+  deletePublishedTrip,
+  findPublishedTripById,
+  upsertPublishedTrip,
+} from "../resources/publishedTrips.resource";
 import { removeImages } from "../resources/tripImages.resource";
 import {
   createTripForUser,
+  getPublicationForUser,
   getTripForUser,
   getTripsForUser,
+  publishTripForUser,
+  unpublishTripForUser,
   updateTripContentForUser,
   updateTripCoverForUser,
 } from "./trips.service";
 
 jest.mock("../resources/trips.resource");
+jest.mock("../resources/publishedTrips.resource");
 jest.mock("../resources/tripImages.resource");
 
 const trip = {
@@ -69,6 +78,15 @@ describe("getTripForUser", () => {
   });
 });
 
+const publishedTrip = {
+  trip_id: "trip-1",
+  owner_id: "user-1",
+  title: "Kyoto",
+  content: {},
+  cover_image_url: null,
+  published_at: "2026-01-02T00:00:00.000Z",
+};
+
 function contentWithImages(...srcs: string[]) {
   return { root: { type: "root", children: srcs.map((src) => ({ type: "image", src })) } };
 }
@@ -76,6 +94,10 @@ function contentWithImages(...srcs: string[]) {
 const supabase = {} as Parameters<typeof updateTripContentForUser>[0];
 
 describe("updateTripContentForUser", () => {
+  beforeEach(() => {
+    jest.mocked(findPublishedTripById).mockResolvedValue(null);
+  });
+
   it("updates the trip's content for the given id and owner", async () => {
     jest.mocked(findTripById).mockResolvedValue(trip);
     const updatedTrip = { ...trip, content: { root: {} } };
@@ -104,6 +126,21 @@ describe("updateTripContentForUser", () => {
     await updateTripContentForUser(supabase, "trip-1", "user-1", next);
 
     expect(removeImages).toHaveBeenCalledWith(supabase, ["user-1/trip-1/a.png"]);
+  });
+
+  it("keeps removed images that the published snapshot still shows", async () => {
+    jest
+      .mocked(findTripById)
+      .mockResolvedValue({ ...trip, content: contentWithImages("user-1/trip-1/a.png", "user-1/trip-1/b.png") });
+    const next = contentWithImages();
+    jest.mocked(updateTripContent).mockResolvedValue({ ...trip, content: next });
+    jest
+      .mocked(findPublishedTripById)
+      .mockResolvedValue({ ...publishedTrip, content: contentWithImages("user-1/trip-1/a.png") });
+
+    await updateTripContentForUser(supabase, "trip-1", "user-1", next);
+
+    expect(removeImages).toHaveBeenCalledWith(supabase, ["user-1/trip-1/b.png"]);
   });
 
   it("does not touch storage when no images were removed", async () => {
@@ -175,5 +212,92 @@ describe("updateTripCoverForUser", () => {
       code: "BAD_REQUEST",
     });
     expect(updateTripCover).not.toHaveBeenCalled();
+  });
+});
+
+describe("getPublicationForUser", () => {
+  it("returns the snapshot when the user owns it", async () => {
+    jest.mocked(findPublishedTripById).mockResolvedValue(publishedTrip);
+
+    await expect(getPublicationForUser(supabase, "trip-1", "user-1")).resolves.toEqual(publishedTrip);
+  });
+
+  it("returns null for another user's published trip", async () => {
+    jest.mocked(findPublishedTripById).mockResolvedValue(publishedTrip);
+
+    await expect(getPublicationForUser(supabase, "trip-1", "user-2")).resolves.toBeNull();
+  });
+});
+
+describe("publishTripForUser", () => {
+  it("snapshots the saved draft's title, content and cover", async () => {
+    const content = contentWithImages("user-1/trip-1/a.png");
+    jest
+      .mocked(findTripById)
+      .mockResolvedValue({ ...trip, content, cover_image_url: "user-1/trip-1/cover.png" });
+    jest.mocked(findPublishedTripById).mockResolvedValue(null);
+    jest.mocked(upsertPublishedTrip).mockResolvedValue({ ...publishedTrip, content });
+
+    const result = await publishTripForUser(supabase, "trip-1", "user-1");
+
+    expect(upsertPublishedTrip).toHaveBeenCalledWith(supabase, {
+      trip_id: "trip-1",
+      owner_id: "user-1",
+      title: "Kyoto",
+      content,
+      cover_image_url: "user-1/trip-1/cover.png",
+    });
+    expect(result).toEqual({ ...publishedTrip, content });
+    expect(removeImages).not.toHaveBeenCalled();
+  });
+
+  it("removes images only the previous snapshot referenced", async () => {
+    jest
+      .mocked(findTripById)
+      .mockResolvedValue({ ...trip, content: contentWithImages("user-1/trip-1/b.png") });
+    jest.mocked(findPublishedTripById).mockResolvedValue({
+      ...publishedTrip,
+      content: contentWithImages("user-1/trip-1/a.png", "user-1/trip-1/b.png"),
+    });
+    jest.mocked(upsertPublishedTrip).mockResolvedValue(publishedTrip);
+
+    await publishTripForUser(supabase, "trip-1", "user-1");
+
+    expect(removeImages).toHaveBeenCalledWith(supabase, ["user-1/trip-1/a.png"]);
+  });
+
+  it("rejects a trip the user doesn't own", async () => {
+    jest.mocked(findTripById).mockResolvedValue(null);
+
+    await expect(publishTripForUser(supabase, "trip-1", "user-2")).rejects.toMatchObject({
+      code: "NOT_FOUND",
+    });
+    expect(upsertPublishedTrip).not.toHaveBeenCalled();
+  });
+});
+
+describe("unpublishTripForUser", () => {
+  it("deletes the snapshot and the images only it referenced", async () => {
+    jest.mocked(findPublishedTripById).mockResolvedValue({
+      ...publishedTrip,
+      content: contentWithImages("user-1/trip-1/a.png", "user-1/trip-1/b.png"),
+    });
+    jest
+      .mocked(findTripById)
+      .mockResolvedValue({ ...trip, content: contentWithImages("user-1/trip-1/b.png") });
+
+    await unpublishTripForUser(supabase, "trip-1", "user-1");
+
+    expect(deletePublishedTrip).toHaveBeenCalledWith(supabase, "trip-1", "user-1");
+    expect(removeImages).toHaveBeenCalledWith(supabase, ["user-1/trip-1/a.png"]);
+  });
+
+  it("does not touch storage when the trip wasn't published", async () => {
+    jest.mocked(findPublishedTripById).mockResolvedValue(null);
+    jest.mocked(findTripById).mockResolvedValue(trip);
+
+    await unpublishTripForUser(supabase, "trip-1", "user-1");
+
+    expect(removeImages).not.toHaveBeenCalled();
   });
 });

@@ -8,7 +8,7 @@ import { ImageIcon, type LucideIcon } from "lucide-react";
 
 import { useUploadTripImage } from "@/lib/api/trips";
 
-import { $createImageNode, type ImageNodeInit } from "../../ImageNode";
+import { $createImageNode, type ImageNodeInit } from "@/components/ImageNode";
 
 export type InsertType = "image";
 
