@@ -16,7 +16,7 @@ export const instant = false;
 export const metadata: Metadata = {
   metadataBase: new URL(getBaseUrl()),
   title: "Luno Travel",
-  description: "The luxury travel journal",
+  description: "A travel journal",
 };
 
 const geistSans = Geist({

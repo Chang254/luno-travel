@@ -73,7 +73,7 @@ export default async function Image({ params }: ImageProps) {
             Luno Travel
           </div>
           <div style={{ fontSize: 72, fontWeight: 700, lineHeight: 1.1, display: "flex" }}>
-            {trip?.title ?? "The luxury travel journal"}
+            {trip?.title ?? "A travel journal"}
           </div>
           {trip?.author_name && (
             <div style={{ display: "flex", alignItems: "center", gap: 20, fontSize: 30 }}>
