@@ -153,6 +153,21 @@ server/
 - Use `protectedProcedure` (defined in `trpc.ts`) for anything that requires an authenticated user — it throws `TRPCError({ code: "UNAUTHORIZED" })` when there's no session, mirroring the existing `getClaims()` check used by `/editor` and the proxy.
 - The tRPC HTTP handler lives at `app/api/trpc/[trpc]/route.ts`.
 
+### Database migrations
+
+All schema changes (tables, columns, RLS policies, storage policies) go through migrations in `supabase/migrations/` — never edit the schema in the Supabase dashboard. Dashboard edits aren't tracked, so local and remote drift apart and `db pull` / `db push` break.
+
+Use the project's CLI via `npx supabase` (pinned in `package.json`), not a globally installed `supabase`. The project is linked to the remote with `npx supabase link --project-ref qomqjixapqhekwjiuplp`.
+
+```
+npx supabase migration new <name>   // creates supabase/migrations/<timestamp>_<name>.sql
+npx supabase db push --dry-run      // preview what will run against the remote
+npx supabase db push                // apply pending migrations to the remote
+npm run db:types                    // regenerate types (see below)
+```
+
+If a change was made in the dashboard anyway, capture it with `npx supabase db pull` (requires Docker running) rather than hand-writing a migration for it. If you hand-wrote a migration for SQL that was already run on the remote, mark it applied with `npx supabase migration repair --status applied <timestamp>` so it doesn't run twice.
+
 ### Database types
 
 `npm run db:types` regenerates `lib/supabase/database.types.ts` from the live Supabase schema. Run it after any migration. The Supabase clients in `lib/supabase/` are generic over this `Database` type — don't bypass that typing with casts.
