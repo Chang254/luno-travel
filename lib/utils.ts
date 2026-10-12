@@ -9,15 +9,19 @@ export function cn(...inputs: ClassValue[]) {
  * In the browser this returns "" so requests are relative to the current
  * origin (VERCEL_URL is server-only and would otherwise fall back to localhost).
  *
- * Note: VERCEL_URL reflects the deployment URL, not a custom domain, so the
- * server-side value will be wrong if the app is ever deployed behind one.
+ * In production this is the project's production domain. VERCEL_URL is the
+ * per-deployment URL, which sits behind Vercel Deployment Protection, so
+ * crawlers (Discord, Slack, X) fetching OG images from it get a login redirect.
+ * Previews still use VERCEL_URL.
  */
 export function getBaseUrl() {
   if (typeof window !== "undefined") return "";
 
-  return process.env.VERCEL_URL
-    ? `https://${process.env.VERCEL_URL}`
-    : "http://localhost:3000";
+  const host =
+    (process.env.VERCEL_ENV === "production" && process.env.VERCEL_PROJECT_PRODUCTION_URL) ||
+    process.env.VERCEL_URL;
+
+  return host ? `https://${host}` : "http://localhost:3000";
 }
 
 // This check can be removed, it is just for tutorial purposes
