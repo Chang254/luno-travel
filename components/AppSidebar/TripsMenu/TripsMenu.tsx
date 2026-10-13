@@ -51,7 +51,7 @@ export default function TripsMenu() {
           <SidebarMenuItem key={trip.id}>
             <SidebarMenuButton asChild isActive={pathname === href} tooltip={trip.title}>
               <Link href={href}>
-                <TripLink title={trip.title} countryCode={trip.city_country_code} />
+                <TripLink title={trip.title} countryCode={trip.city.country_code} />
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>

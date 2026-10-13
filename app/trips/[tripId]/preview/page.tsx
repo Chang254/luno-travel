@@ -45,8 +45,8 @@ async function DraftPreview({ params }: PreviewPageProps) {
           <TripByline
             // The draft isn't snapshotted, so show the owner as they'll appear once published.
             author={getUserProfile(data.claims)}
-            cityName={trip.city_name}
-            cityCountryCode={trip.city_country_code}
+            cityName={trip.city.name}
+            cityCountryCode={trip.city.country_code}
             publishedAt={publication?.published_at ?? null}
           />
         }

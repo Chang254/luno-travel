@@ -6,7 +6,7 @@
     "start": "next start",
     "lint": "eslint .",
     "test": "jest",
-    "cities:build": "node scripts/build-cities.mjs",
+    "cities:load": "node --env-file=.env.local scripts/load-cities.mjs",
     "db:types": "supabase gen types typescript --project-id qomqjixapqhekwjiuplp --schema public > lib/supabase/database.types.ts"
   },
   "dependencies": {

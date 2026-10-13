@@ -12,7 +12,6 @@ import {
   upsertPublishedTrip,
 } from "../resources/publishedTrips.resource";
 import { removeImages } from "../resources/tripImages.resource";
-import { getCityDetails } from "./cities.service";
 import {
   createTripForUser,
   getPublicationForUser,
@@ -28,7 +27,15 @@ import {
 jest.mock("../resources/trips.resource");
 jest.mock("../resources/publishedTrips.resource");
 jest.mock("../resources/tripImages.resource");
-jest.mock("./cities.service");
+
+const kyoto = {
+  id: 1857910,
+  name: "Kyoto",
+  country_code: "JP",
+  region_name: "Kyoto",
+  latitude: 35.02107,
+  longitude: 135.75385,
+};
 
 const trip = {
   id: "trip-1",
@@ -36,10 +43,8 @@ const trip = {
   title: "Kyoto",
   content: {},
   cover_image_url: null,
-  city_name: "Kyoto",
-  city_country_code: "JP",
-  city_latitude: 35.02107,
-  city_longitude: 135.75385,
+  city_id: 1857910,
+  city: kyoto,
   created_at: "2026-01-01T00:00:00.000Z",
   updated_at: "2026-01-01T00:00:00.000Z",
 };
@@ -92,10 +97,8 @@ const publishedTrip = {
   title: "Kyoto",
   content: {},
   cover_image_url: null,
-  city_name: null,
-  city_country_code: null,
-  city_latitude: null,
-  city_longitude: null,
+  city_id: null,
+  city: null,
   author_name: "Ada Lovelace",
   author_avatar_url: "https://example.com/ada.png",
   published_at: "2026-01-02T00:00:00.000Z",
@@ -110,13 +113,7 @@ function contentWithImages(...srcs: string[]) {
 const supabase = {} as Parameters<typeof updateTripContentForUser>[0];
 
 const cityInput = { geonameId: 1857910 };
-const kyoto = { name: "Kyoto", countryCode: "JP", latitude: 35.02107, longitude: 135.75385 };
-const kyotoColumns = {
-  city_name: "Kyoto",
-  city_country_code: "JP",
-  city_latitude: 35.02107,
-  city_longitude: 135.75385,
-};
+const foreignKeyViolation = Object.assign(new Error("violates foreign key"), { code: "23503" });
 
 describe("updateTripContentForUser", () => {
   beforeEach(() => {
@@ -207,29 +204,34 @@ describe("updateTripContentForUser", () => {
 });
 
 describe("createTripForUser", () => {
-  it("stores the details of the picked city", async () => {
-    jest.mocked(getCityDetails).mockResolvedValue(kyoto);
+  it("stores the picked city", async () => {
     jest.mocked(insertTrip).mockResolvedValue(trip);
 
     const result = await createTripForUser(supabase, "user-1", "Kyoto", cityInput);
 
-    expect(getCityDetails).toHaveBeenCalledWith(1857910);
-    expect(insertTrip).toHaveBeenCalledWith(supabase, "user-1", "Kyoto", kyotoColumns);
+    expect(insertTrip).toHaveBeenCalledWith(supabase, "user-1", "Kyoto", { city_id: 1857910 });
     expect(result).toEqual(trip);
   });
 
-  it("doesn't create the trip when the city can't be resolved", async () => {
-    jest.mocked(getCityDetails).mockRejectedValue(new Error("Unknown city"));
+  it("rejects a city that isn't in the cities table", async () => {
+    jest.mocked(insertTrip).mockRejectedValue(foreignKeyViolation);
+
+    await expect(createTripForUser(supabase, "user-1", "Kyoto", cityInput)).rejects.toMatchObject({
+      code: "BAD_REQUEST",
+      message: "Unknown city",
+    });
+  });
+
+  it("passes other database errors through", async () => {
+    jest.mocked(insertTrip).mockRejectedValue(new Error("db down"));
 
     await expect(createTripForUser(supabase, "user-1", "Kyoto", cityInput)).rejects.toThrow(
-      "Unknown city",
+      "db down",
     );
-    expect(insertTrip).not.toHaveBeenCalled();
   });
 });
 
 describe("updateTripDetailsForUser", () => {
-  const osaka = { name: "Osaka", countryCode: "JP", latitude: 34.69374, longitude: 135.50218 };
   const osakaInput = { geonameId: 1853909 };
   const tripWithCover = { ...trip, cover_image_url: "user-1/trip-1/old.png" };
 
@@ -244,25 +246,19 @@ describe("updateTripDetailsForUser", () => {
 
     const result = await updateTripDetailsForUser(supabase, "trip-1", "user-1", { title: "Kansai" });
 
-    expect(getCityDetails).not.toHaveBeenCalled();
     expect(updateTripDetails).toHaveBeenCalledWith(supabase, "trip-1", "user-1", { title: "Kansai" });
     expect(removeImages).not.toHaveBeenCalled();
     expect(result).toEqual(updatedTrip);
   });
 
-  it("stores the details of a newly picked city", async () => {
-    jest.mocked(getCityDetails).mockResolvedValue(osaka);
+  it("stores a newly picked city", async () => {
     jest.mocked(updateTripDetails).mockResolvedValue(tripWithCover);
 
     await updateTripDetailsForUser(supabase, "trip-1", "user-1", { title: "Kyoto", city: osakaInput });
 
-    expect(getCityDetails).toHaveBeenCalledWith(1853909);
     expect(updateTripDetails).toHaveBeenCalledWith(supabase, "trip-1", "user-1", {
       title: "Kyoto",
-      city_name: "Osaka",
-      city_country_code: "JP",
-      city_latitude: 34.69374,
-      city_longitude: 135.50218,
+      city_id: 1853909,
     });
   });
 
@@ -377,7 +373,7 @@ describe("publishTripForUser", () => {
       title: "Kyoto",
       content,
       cover_image_url: "user-1/trip-1/cover.png",
-      ...kyotoColumns,
+      city_id: 1857910,
       author_name: "Ada Lovelace",
       author_avatar_url: "https://example.com/ada.png",
     });

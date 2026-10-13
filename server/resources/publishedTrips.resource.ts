@@ -1,6 +1,9 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/supabase/database.types";
-import type { PublishedTrip } from "@/server/models/publishedTrips.types";
+import type { PublishedTrip, PublishedTripRow } from "@/server/models/publishedTrips.types";
+import { CITY_EMBED } from "@/server/resources/cities.resource";
+
+const PUBLISHED_TRIP_SELECT = `*, ${CITY_EMBED}` as const;
 
 /** No owner filter: RLS lets anyone read published trips. */
 export async function findPublishedTripById(
@@ -9,7 +12,7 @@ export async function findPublishedTripById(
 ): Promise<PublishedTrip | null> {
   const { data, error } = await supabase
     .from("published_trips")
-    .select("*")
+    .select(PUBLISHED_TRIP_SELECT)
     .eq("trip_id", tripId)
     .maybeSingle();
 
@@ -19,12 +22,12 @@ export async function findPublishedTripById(
 
 export async function upsertPublishedTrip(
   supabase: SupabaseClient<Database>,
-  snapshot: Omit<PublishedTrip, "published_at">,
+  snapshot: Omit<PublishedTripRow, "published_at">,
 ): Promise<PublishedTrip> {
   const { data, error } = await supabase
     .from("published_trips")
     .upsert({ ...snapshot, published_at: new Date().toISOString() }, { onConflict: "trip_id" })
-    .select("*")
+    .select(PUBLISHED_TRIP_SELECT)
     .single();
 
   if (error) throw error;

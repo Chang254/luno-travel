@@ -1,21 +1,21 @@
-import { readFile } from "node:fs/promises";
-import { join } from "node:path";
+import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Database } from "@/lib/supabase/database.types";
+import type { City } from "@/server/models/cities.types";
 
-import type { GeoNamesCity } from "@/server/models/cities.types";
+/** Embeds a row's city in a `trips` or `published_trips` select. */
+export const CITY_EMBED = "city:cities(id, name, country_code, region_name, latitude, longitude)";
 
-/** Also listed in `outputFileTracingIncludes` in next.config.ts so it ships with the server. */
-const CITIES_PATH = join(process.cwd(), "server/data/cities.json");
+/** Ranked matches from the `search_cities` database function. */
+export async function searchCityRows(
+  supabase: SupabaseClient<Database>,
+  query: string,
+  qualifier: string | null,
+): Promise<City[]> {
+  const { data, error } = await supabase.rpc("search_cities", {
+    query,
+    ...(qualifier && { qualifier }),
+  });
 
-let citiesPromise: Promise<GeoNamesCity[]> | undefined;
-
-/** Every city, largest first. Read once per server instance and kept in memory. */
-export function loadCities(): Promise<GeoNamesCity[]> {
-  citiesPromise ??= readFile(CITIES_PATH, "utf8")
-    .then((json): GeoNamesCity[] => JSON.parse(json))
-    .catch((error) => {
-      // Not cached, so the next request retries the read.
-      citiesPromise = undefined;
-      throw error;
-    });
-  return citiesPromise;
+  if (error) throw error;
+  return data;
 }

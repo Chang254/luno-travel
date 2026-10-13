@@ -15,7 +15,7 @@ import type { TripDetailsColumns } from "../TripDetails.helpers";
 export function toFormValues(details: TripDetailsColumns): TripDetailsFormInput {
   return {
     title: details.title,
-    city: { name: details.city_name, countryCode: details.city_country_code },
+    city: { name: details.city.name, countryCode: details.city.country_code },
     coverImage: details.cover_image_url,
   };
 }

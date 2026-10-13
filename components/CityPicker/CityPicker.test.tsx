@@ -1,5 +1,5 @@
 import { useCitySearch } from "@/lib/api/cities";
-import { render, screen, waitFor } from "@/lib/test-utils";
+import { render, screen, waitFor, within } from "@/lib/test-utils";
 import CityPicker from "./CityPicker";
 
 jest.mock("@/lib/api/cities");
@@ -38,6 +38,17 @@ describe("CityPicker", () => {
     });
     expect(screen.queryByRole("option")).not.toBeInTheDocument();
     expect(useCitySearch).toHaveBeenLastCalledWith("");
+  });
+
+  it("shows each suggestion's country flag", async () => {
+    const { user } = render(<CityPicker value={null} onSelect={jest.fn()} />);
+
+    await user.type(screen.getByRole("combobox"), "kyo");
+
+    const kyotoOption = await screen.findByRole("option", { name: /Kyoto/ });
+    expect(within(kyotoOption).getByRole("img", { name: "Japan" })).toBeInTheDocument();
+    const kyoteraOption = screen.getByRole("option", { name: /Kyotera/ });
+    expect(within(kyoteraOption).getByRole("img", { name: "Uganda" })).toBeInTheDocument();
   });
 
   it("doesn't show results for a one-letter query", async () => {

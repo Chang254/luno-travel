@@ -18,8 +18,8 @@ export default function TripDetails({ tripId, initialDetails }: TripDetailsProps
     <div className={styles.root}>
       <h1 className={styles.title}>{details.title}</h1>
       <span className={styles.place}>
-        <CountryFlag countryCode={details.city_country_code} />
-        {details.city_name}
+        <CountryFlag countryCode={details.city.country_code} />
+        {details.city.name}
       </span>
       <TripDetailsDialog tripId={tripId} details={details} onSaved={updateDetails} />
     </div>

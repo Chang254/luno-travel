@@ -23,7 +23,6 @@ import {
   updateTripDetails,
   updateTripCover,
 } from "@/server/resources/trips.resource";
-import { getCityDetails } from "@/server/services/cities.service";
 import {
   getRemovedCoverPaths,
   getRemovedImagePaths,
@@ -45,15 +44,23 @@ export async function getTripForUser(
   return findTripById(supabase, id, ownerId);
 }
 
-/** Looks the picked city up server-side so the stored name, country and coordinates can't be forged. */
-async function resolveTripCity({ geonameId }: TripCityInput): Promise<TripCity> {
-  const details = await getCityDetails(geonameId);
-  return {
-    city_name: details.name,
-    city_country_code: details.countryCode,
-    city_latitude: details.latitude,
-    city_longitude: details.longitude,
-  };
+/** Postgres error code for a foreign key violation. */
+const FOREIGN_KEY_VIOLATION = "23503";
+
+function toTripCity({ geonameId }: TripCityInput): TripCity {
+  return { city_id: geonameId };
+}
+
+/** A picked city id missing from `cities` fails its foreign key; report that as bad input. */
+async function withCityCheck<T>(write: Promise<T>): Promise<T> {
+  try {
+    return await write;
+  } catch (error) {
+    if ((error as { code?: string }).code === FOREIGN_KEY_VIOLATION) {
+      throw new TRPCError({ code: "BAD_REQUEST", message: "Unknown city" });
+    }
+    throw error;
+  }
 }
 
 export async function createTripForUser(
@@ -62,7 +69,7 @@ export async function createTripForUser(
   title: string,
   city: TripCityInput,
 ): Promise<Trip> {
-  return insertTrip(supabase, ownerId, title, await resolveTripCity(city));
+  return withCityCheck(insertTrip(supabase, ownerId, title, toTripCity(city)));
 }
 
 /** Covers must sit in this trip's image folder so a client can't point one at another user's object. */
@@ -97,13 +104,14 @@ export async function updateTripDetailsForUser(
 ): Promise<Trip> {
   if (coverImagePath) assertTripImagePath(ownerId, id, coverImagePath);
 
-  const resolvedCity = city && (await resolveTripCity(city));
   const previous = await findTripById(supabase, id, ownerId);
-  const trip = await updateTripDetails(supabase, id, ownerId, {
-    title,
-    ...resolvedCity,
-    ...(coverImagePath !== undefined && { cover_image_url: coverImagePath }),
-  });
+  const trip = await withCityCheck(
+    updateTripDetails(supabase, id, ownerId, {
+      title,
+      ...(city && toTripCity(city)),
+      ...(coverImagePath !== undefined && { cover_image_url: coverImagePath }),
+    }),
+  );
 
   if (previous?.cover_image_url && previous.cover_image_url !== trip.cover_image_url) {
     const published = await findPublishedTripById(supabase, id);
@@ -196,10 +204,7 @@ export async function publishTripForUser(
     title: trip.title,
     content: trip.content,
     cover_image_url: trip.cover_image_url,
-    city_name: trip.city_name,
-    city_country_code: trip.city_country_code,
-    city_latitude: trip.city_latitude,
-    city_longitude: trip.city_longitude,
+    city_id: trip.city_id,
     author_name: author.name,
     author_avatar_url: author.avatarUrl,
   });

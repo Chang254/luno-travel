@@ -130,7 +130,7 @@ export default function CityPicker({
                       className={styles.option}
                       onSelect={() => selectSuggestion(suggestion)}
                     >
-                      <MapPin className={styles.optionIcon} />
+                      <CountryFlag countryCode={suggestion.countryCode} className={styles.optionFlag} />
                       <span className={styles.suggestion}>
                         <span>{suggestion.primaryText}</span>
                         <span className={styles.suggestionDetail}>{suggestion.secondaryText}</span>

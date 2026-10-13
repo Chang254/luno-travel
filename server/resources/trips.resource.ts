@@ -1,10 +1,12 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/supabase/database.types";
 import type { Trip, TripCity } from "@/server/models/trips.types";
+import { CITY_EMBED } from "@/server/resources/cities.resource";
+
+const TRIP_SELECT = `*, ${CITY_EMBED}` as const;
 
 /** Columns the trip details dialog can change; omitted ones are left as they are. */
-export type TripDetailsUpdate = Pick<Trip, "title"> &
-  Partial<TripCity & Pick<Trip, "cover_image_url">>;
+export type TripDetailsUpdate = Pick<Trip, "title"> & Partial<TripCity & Pick<Trip, "cover_image_url">>;
 
 export async function findTripsByOwnerId(
   supabase: SupabaseClient<Database>,
@@ -12,7 +14,7 @@ export async function findTripsByOwnerId(
 ): Promise<Trip[]> {
   const { data, error } = await supabase
     .from("trips")
-    .select("*")
+    .select(TRIP_SELECT)
     .eq("owner_id", ownerId)
     .order("updated_at", { ascending: false });
 
@@ -27,7 +29,7 @@ export async function findTripById(
 ): Promise<Trip | null> {
   const { data, error } = await supabase
     .from("trips")
-    .select("*")
+    .select(TRIP_SELECT)
     .eq("id", id)
     .eq("owner_id", ownerId)
     .maybeSingle();
@@ -47,7 +49,7 @@ export async function updateTripContent(
     .update({ content })
     .eq("id", id)
     .eq("owner_id", ownerId)
-    .select("*")
+    .select(TRIP_SELECT)
     .single();
 
   if (error) throw error;
@@ -63,7 +65,7 @@ export async function insertTrip(
   const { data, error } = await supabase
     .from("trips")
     .insert({ owner_id: ownerId, title, ...city })
-    .select("*")
+    .select(TRIP_SELECT)
     .single();
 
   if (error) throw error;
@@ -81,7 +83,7 @@ export async function updateTripCover(
     .update({ cover_image_url: coverImagePath })
     .eq("id", id)
     .eq("owner_id", ownerId)
-    .select("*")
+    .select(TRIP_SELECT)
     .single();
 
   if (error) throw error;
@@ -99,7 +101,7 @@ export async function updateTripDetails(
     .update(details)
     .eq("id", id)
     .eq("owner_id", ownerId)
-    .select("*")
+    .select(TRIP_SELECT)
     .single();
 
   if (error) throw error;

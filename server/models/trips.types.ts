@@ -1,8 +1,10 @@
 import { z } from "zod";
 
 import type { Tables } from "@/lib/supabase/database.types";
+import type { TripCityView } from "@/server/models/cities.types";
 
-export type Trip = { [K in keyof Tables<"trips">]: Tables<"trips">[K] };
+/** A trip row with its city embedded. */
+export type Trip = { [K in keyof Tables<"trips">]: Tables<"trips">[K] } & { city: TripCityView };
 
 export const getTripInputSchema = z.object({
   id: z.string(),
@@ -16,13 +18,10 @@ export const updateTripContentInputSchema = z.object({
   content: z.record(z.string(), z.any()),
 });
 
-/** The trip's city columns, copied from the picked GeoNames city. */
-export type TripCity = Pick<
-  Trip,
-  "city_name" | "city_country_code" | "city_latitude" | "city_longitude"
->;
+/** The trip's reference to its row in `cities`. */
+export type TripCity = Pick<Tables<"trips">, "city_id">;
 
-/** A picked autocomplete suggestion; the server looks up its name, country and coordinates. */
+/** A picked autocomplete suggestion; its id must exist in `cities`. */
 export const tripCityInputSchema = z.object({
   geonameId: z.number().int().positive(),
 });

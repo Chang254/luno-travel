@@ -38,8 +38,7 @@ async function AuthenticatedEditor({ params }: AuthenticatedEditorProps) {
         details={{
           title: trip.title,
           cover_image_url: trip.cover_image_url,
-          city_name: trip.city_name,
-          city_country_code: trip.city_country_code,
+          city: trip.city,
         }}
         isPublished={publication !== null}
       />

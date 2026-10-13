@@ -9,7 +9,7 @@ Required env (see [`.env.example`](.env.example)):
 - `NEXT_PUBLIC_SUPABASE_URL`
 - `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
 
-City autocomplete searches `server/data/cities.json` in memory (GeoNames, CC BY 4.0, cities with 5,000+ people). Regenerate it with `npm run cities:build`.
+Cities live in the Supabase `cities` table (GeoNames, CC BY 4.0, cities with 1,000+ people); autocomplete calls its `search_cities` function. Refresh the data with `npm run cities:load`, which needs `SUPABASE_DB_URL` in `.env.local`.
 
 Coding patterns (folder structure, typing, comments, Tailwind in `.styles.ts`) live in [CONVENTIONS.md](CONVENTIONS.md). Follow that document before adding new code.
 

@@ -4,6 +4,11 @@ import { SidebarProvider } from "@/components/ui/sidebar";
 import { useTrips } from "../../../lib/api/trips";
 import TripsMenu from "./TripsMenu";
 
+/** A trip's embedded city; only the name and flag are shown. */
+function testCity(name: string, country_code: string) {
+  return { id: 1, name, country_code, region_name: null, latitude: 0, longitude: 0 };
+}
+
 jest.mock("../../../lib/api/trips");
 
 const mockUsePathname = jest.fn();
@@ -71,10 +76,8 @@ describe("TripsMenu", () => {
           title: "Kyoto",
           content: {},
           cover_image_url: null,
-          city_name: null,
-          city_country_code: null,
-          city_latitude: null,
-          city_longitude: null,
+          city_id: 1,
+          city: testCity("Kyoto", "JP"),
           created_at: "2026-01-01T00:00:00.000Z",
           updated_at: "2026-01-01T00:00:00.000Z",
         },
@@ -84,10 +87,8 @@ describe("TripsMenu", () => {
           title: "Lisbon",
           content: {},
           cover_image_url: null,
-          city_name: null,
-          city_country_code: null,
-          city_latitude: null,
-          city_longitude: null,
+          city_id: 1,
+          city: testCity("Lisbon", "PT"),
           created_at: "2026-01-01T00:00:00.000Z",
           updated_at: "2026-01-01T00:00:00.000Z",
         },
@@ -96,11 +97,11 @@ describe("TripsMenu", () => {
 
     renderTripsMenu();
 
-    expect(screen.getByRole("link", { name: "Kyoto" })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: /Kyoto/ })).toHaveAttribute(
       "href",
       "/editor/1",
     );
-    expect(screen.getByRole("link", { name: "Lisbon" })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: /Lisbon/ })).toHaveAttribute(
       "href",
       "/editor/2",
     );
@@ -118,10 +119,8 @@ describe("TripsMenu", () => {
           title: "Kyoto",
           content: {},
           cover_image_url: null,
-          city_name: null,
-          city_country_code: null,
-          city_latitude: null,
-          city_longitude: null,
+          city_id: 1,
+          city: testCity("Kyoto", "JP"),
           created_at: "2026-01-01T00:00:00.000Z",
           updated_at: "2026-01-01T00:00:00.000Z",
         },
@@ -131,10 +130,8 @@ describe("TripsMenu", () => {
           title: "Lisbon",
           content: {},
           cover_image_url: null,
-          city_name: null,
-          city_country_code: null,
-          city_latitude: null,
-          city_longitude: null,
+          city_id: 1,
+          city: testCity("Lisbon", "PT"),
           created_at: "2026-01-01T00:00:00.000Z",
           updated_at: "2026-01-01T00:00:00.000Z",
         },
@@ -143,11 +140,11 @@ describe("TripsMenu", () => {
 
     renderTripsMenu();
 
-    expect(screen.getByRole("link", { name: "Kyoto" })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: /Kyoto/ })).toHaveAttribute(
       "data-active",
       "true",
     );
-    expect(screen.getByRole("link", { name: "Lisbon" })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: /Lisbon/ })).toHaveAttribute(
       "data-active",
       "false",
     );

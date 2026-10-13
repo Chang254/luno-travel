@@ -32,7 +32,7 @@ export default async function Image({ params }: ImageProps) {
     fetchImageDataUrl(trip?.cover_image_url ? getTripImageUrl(trip.cover_image_url) : null),
     fetchImageDataUrl(trip?.author_avatar_url ?? null),
   ]);
-  const flag = getFlagDataUrl(trip?.city_country_code ?? null);
+  const flag = getFlagDataUrl(trip?.city?.country_code ?? null);
 
   return new ImageResponse(
     (
@@ -73,10 +73,10 @@ export default async function Image({ params }: ImageProps) {
           <div style={{ fontSize: 22, letterSpacing: 6, textTransform: "uppercase", opacity: 0.85 }}>
             Luno Travel
           </div>
-          {trip?.city_name && (
+          {trip?.city?.name && (
             <div style={{ display: "flex", alignItems: "center", gap: 16, fontSize: 30 }}>
               {flag && <img src={flag} alt="" width={48} height={32} style={{ borderRadius: 4 }} />}
-              <span>{trip.city_name}</span>
+              <span>{trip.city.name}</span>
             </div>
           )}
           <div style={{ fontSize: 72, fontWeight: 700, lineHeight: 1.1, display: "flex" }}>

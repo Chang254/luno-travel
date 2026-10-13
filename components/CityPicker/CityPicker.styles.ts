@@ -4,9 +4,9 @@ export const styles = {
   icon: "pointer-events-none absolute text-sm top-1/2 left-2.5 flex -translate-y-1/2 text-muted-foreground [&_svg]:size-4",
   input: "pl-8",
   content: "w-[var(--radix-popover-trigger-width)] min-w-72 p-0",
-  /** `group` so the icon and detail can follow the highlight; muted text matches the accent background. */
+  /** `group` so the detail can follow the highlight; muted text matches the accent background. */
   option: "group",
-  optionIcon: "text-muted-foreground group-data-[selected=true]:text-accent-foreground",
+  optionFlag: "h-3",
   suggestion: "flex min-w-0 flex-col items-start gap-0",
   suggestionDetail:
     "truncate text-xs text-muted-foreground group-data-[selected=true]:text-accent-foreground/80",

@@ -14,14 +14,53 @@ export type Database = {
   }
   public: {
     Tables: {
+      cities: {
+        Row: {
+          ascii_name: string
+          country_code: string
+          country_name: string
+          id: number
+          latitude: number
+          longitude: number
+          name: string
+          population: number
+          region_name: string | null
+          search_ascii: string | null
+          search_name: string | null
+        }
+        Insert: {
+          ascii_name: string
+          country_code: string
+          country_name: string
+          id: number
+          latitude: number
+          longitude: number
+          name: string
+          population?: number
+          region_name?: string | null
+          search_ascii?: string | null
+          search_name?: string | null
+        }
+        Update: {
+          ascii_name?: string
+          country_code?: string
+          country_name?: string
+          id?: number
+          latitude?: number
+          longitude?: number
+          name?: string
+          population?: number
+          region_name?: string | null
+          search_ascii?: string | null
+          search_name?: string | null
+        }
+        Relationships: []
+      }
       published_trips: {
         Row: {
           author_avatar_url: string | null
           author_name: string | null
-          city_country_code: string | null
-          city_latitude: number | null
-          city_longitude: number | null
-          city_name: string | null
+          city_id: number | null
           content: Json
           cover_image_url: string | null
           owner_id: string
@@ -32,10 +71,7 @@ export type Database = {
         Insert: {
           author_avatar_url?: string | null
           author_name?: string | null
-          city_country_code?: string | null
-          city_latitude?: number | null
-          city_longitude?: number | null
-          city_name?: string | null
+          city_id?: number | null
           content: Json
           cover_image_url?: string | null
           owner_id: string
@@ -46,10 +82,7 @@ export type Database = {
         Update: {
           author_avatar_url?: string | null
           author_name?: string | null
-          city_country_code?: string | null
-          city_latitude?: number | null
-          city_longitude?: number | null
-          city_name?: string | null
+          city_id?: number | null
           content?: Json
           cover_image_url?: string | null
           owner_id?: string
@@ -58,6 +91,13 @@ export type Database = {
           trip_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "published_trips_city_id_fkey"
+            columns: ["city_id"]
+            isOneToOne: false
+            referencedRelation: "cities"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "published_trips_trip_id_fkey"
             columns: ["trip_id"]
@@ -69,10 +109,7 @@ export type Database = {
       }
       trips: {
         Row: {
-          city_country_code: string
-          city_latitude: number | null
-          city_longitude: number | null
-          city_name: string
+          city_id: number
           content: Json
           cover_image_url: string | null
           created_at: string
@@ -82,10 +119,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
-          city_country_code: string
-          city_latitude?: number | null
-          city_longitude?: number | null
-          city_name: string
+          city_id: number
           content?: Json
           cover_image_url?: string | null
           created_at?: string
@@ -95,10 +129,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
-          city_country_code?: string
-          city_latitude?: number | null
-          city_longitude?: number | null
-          city_name?: string
+          city_id?: number
           content?: Json
           cover_image_url?: string | null
           created_at?: string
@@ -107,14 +138,44 @@ export type Database = {
           title?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "trips_city_id_fkey"
+            columns: ["city_id"]
+            isOneToOne: false
+            referencedRelation: "cities"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      normalize_city_text: { Args: { "": string }; Returns: string }
+      search_cities: {
+        Args: { max_results?: number; qualifier?: string; query: string }
+        Returns: {
+          ascii_name: string
+          country_code: string
+          country_name: string
+          id: number
+          latitude: number
+          longitude: number
+          name: string
+          population: number
+          region_name: string | null
+          search_ascii: string | null
+          search_name: string | null
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "cities"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
     }
     Enums: {
       [_ in never]: never

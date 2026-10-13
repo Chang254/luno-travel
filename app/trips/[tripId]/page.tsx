@@ -27,7 +27,7 @@ export async function generateMetadata({ params }: TripPageProps): Promise<Metad
 
   if (!trip) return {};
 
-  const description = getShareDescription(trip.city_name, trip.city_country_code) ?? undefined;
+  const description = getShareDescription(trip.city?.name ?? null, trip.city?.country_code ?? null) ?? undefined;
 
   const authors = trip.author_name ? [trip.author_name] : undefined;
 
@@ -62,8 +62,8 @@ async function PublishedTrip({ params }: TripPageProps) {
       byline={
         <TripByline
           author={{ name: trip.author_name, avatarUrl: trip.author_avatar_url }}
-          cityName={trip.city_name}
-          cityCountryCode={trip.city_country_code}
+          cityName={trip.city?.name ?? null}
+          cityCountryCode={trip.city?.country_code ?? null}
           publishedAt={trip.published_at}
         />
       }

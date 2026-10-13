@@ -22,8 +22,14 @@ function mockUpdateDetails(state: Partial<ReturnType<typeof useUpdateTripDetails
 const details = {
   title: "Summer in Kyoto",
   cover_image_url: "user-1/trip-1/cover.png",
-  city_name: "Kyoto",
-  city_country_code: "JP",
+  city: {
+    id: 1857910,
+    name: "Kyoto",
+    country_code: "JP",
+    region_name: "Kyoto",
+    latitude: 35.02107,
+    longitude: 135.75385,
+  },
 };
 
 const newCover = new File(["cover"], "new.png", { type: "image/png" });
@@ -143,7 +149,7 @@ describe("TripDetails", () => {
 
   it("closes and shows the saved details once saved", async () => {
     mutate.mockImplementation((_input, { onSuccess }) =>
-      onSuccess({ id: "trip-1", content: {}, ...details, title: "Kansai", city_name: "Osaka" }),
+      onSuccess({ id: "trip-1", content: {}, ...details, title: "Kansai", city: { ...details.city, name: "Osaka" } }),
     );
     const { user } = render(<TripDetails tripId="trip-1" initialDetails={details} />);
     const dialog = await openDialog(user);
