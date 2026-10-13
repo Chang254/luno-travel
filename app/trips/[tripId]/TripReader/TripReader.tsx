@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { type ReactNode, useMemo } from "react";
 import { defineExtension } from "lexical";
 import { LexicalExtensionComposer } from "@lexical/react/LexicalExtensionComposer";
 import { ContentEditable } from "@lexical/react/LexicalContentEditable";
@@ -11,7 +11,6 @@ import {
   getInitialEditorState,
 } from "@/lib/lexical/tripContent";
 import { tripContentStyles } from "@/lib/lexical/tripContent.styles";
-import CountryFlag from "@/components/CountryFlag";
 import { getTripImageUrl } from "@/lib/supabase/storage";
 import type { Trip } from "@/server/models/trips.types";
 
@@ -22,9 +21,8 @@ interface TripReaderProps {
   /** Object path in the trip images bucket. */
   coverImagePath?: string | null;
   content: Trip["content"];
-  cityName?: string | null;
-  /** ISO-2 code; shown as a flag beside the city. */
-  cityCountryCode?: string | null;
+  /** Shown under the title, e.g. a `TripByline`. */
+  byline?: ReactNode;
 }
 
 /** Read-only render of trip content with the editor's own nodes and theme, so it matches the editor. */
@@ -32,8 +30,7 @@ export default function TripReader({
   title,
   coverImagePath,
   content,
-  cityName,
-  cityCountryCode,
+  byline,
 }: TripReaderProps) {
   const readerExtension = useMemo(
     () =>
@@ -58,12 +55,7 @@ export default function TripReader({
         />
       )}
       <h1 className={styles.title}>{title}</h1>
-      {cityName && (
-        <p className={styles.city}>
-          {cityCountryCode && <CountryFlag countryCode={cityCountryCode} />}
-          {cityName}
-        </p>
-      )}
+      {byline && <div className={styles.byline}>{byline}</div>}
       <LexicalExtensionComposer
         extension={readerExtension}
         contentEditable={<ContentEditable className={tripContentStyles.surface} />}

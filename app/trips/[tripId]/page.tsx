@@ -7,6 +7,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getPublishedTrip } from "@/server/services/trips.service";
 
 import { getShareDescription } from "./ogImage.helpers";
+import TripByline from "./TripByline";
 import TripReader from "./TripReader";
 import { styles } from "./page.styles";
 
@@ -28,8 +29,21 @@ export async function generateMetadata({ params }: TripPageProps): Promise<Metad
 
   const description = getShareDescription(trip.city_name, trip.city_country_code) ?? undefined;
 
+  const authors = trip.author_name ? [trip.author_name] : undefined;
+
   // The share image comes from ./opengraph-image.tsx.
-  return { title: trip.title, description, openGraph: { title: trip.title, description } };
+  return {
+    title: trip.title,
+    description,
+    authors: authors?.map((name) => ({ name })),
+    openGraph: {
+      type: "article",
+      title: trip.title,
+      description,
+      publishedTime: trip.published_at,
+      authors,
+    },
+  };
 }
 
 async function PublishedTrip({ params }: TripPageProps) {
@@ -45,8 +59,14 @@ async function PublishedTrip({ params }: TripPageProps) {
       title={trip.title}
       coverImagePath={trip.cover_image_url}
       content={trip.content}
-      cityName={trip.city_name}
-      cityCountryCode={trip.city_country_code}
+      byline={
+        <TripByline
+          author={{ name: trip.author_name, avatarUrl: trip.author_avatar_url }}
+          cityName={trip.city_name}
+          cityCountryCode={trip.city_country_code}
+          publishedAt={trip.published_at}
+        />
+      }
     />
   );
 }

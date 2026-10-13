@@ -2,9 +2,11 @@ import { notFound, redirect } from "next/navigation";
 import { Suspense } from "react";
 
 import TripLoading from "@/components/TripLoading";
+import { getUserProfile } from "@/lib/auth/userProfile";
 import { createClient } from "@/lib/supabase/server";
-import { getTripForUser } from "@/server/services/trips.service";
+import { getPublicationForUser, getTripForUser } from "@/server/services/trips.service";
 
+import TripByline from "../TripByline";
 import TripReader from "../TripReader";
 import PreviewBar from "./PreviewBar";
 import { styles } from "../page.styles";
@@ -23,7 +25,10 @@ async function DraftPreview({ params }: PreviewPageProps) {
     redirect("/auth/login");
   }
 
-  const trip = await getTripForUser(supabase, tripId, data.claims.sub);
+  const [trip, publication] = await Promise.all([
+    getTripForUser(supabase, tripId, data.claims.sub),
+    getPublicationForUser(supabase, tripId, data.claims.sub),
+  ]);
 
   if (!trip) {
     notFound();
@@ -36,8 +41,15 @@ async function DraftPreview({ params }: PreviewPageProps) {
         title={trip.title}
         coverImagePath={trip.cover_image_url}
         content={trip.content}
-        cityName={trip.city_name}
-        cityCountryCode={trip.city_country_code}
+        byline={
+          <TripByline
+            // The draft isn't snapshotted, so show the owner as they'll appear once published.
+            author={getUserProfile(data.claims)}
+            cityName={trip.city_name}
+            cityCountryCode={trip.city_country_code}
+            publishedAt={publication?.published_at ?? null}
+          />
+        }
       />
     </>
   );

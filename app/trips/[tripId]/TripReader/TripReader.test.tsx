@@ -61,4 +61,10 @@ describe("TripReader", () => {
       expect.stringContaining("user-1/trip-1/cover.png"),
     );
   });
+
+  it("shows the byline under the title", () => {
+    render(<TripReader title="Kyoto" content={content} byline={<p>By Ada</p>} />);
+
+    expect(screen.getByText("By Ada")).toBeInTheDocument();
+  });
 });
