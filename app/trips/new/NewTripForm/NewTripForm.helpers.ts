@@ -16,7 +16,7 @@ export const ACCEPTED_COVER_TYPES = COVER_TYPES.join(",");
 export const newTripFormSchema = createTripInputSchema.extend({
   coverImage: z.file().mime(COVER_TYPES, "Choose a JPEG, PNG, GIF, WebP, or AVIF image.").nullable(),
   /** The picked suggestion plus its label; only `placeId` and `sessionToken` are sent. */
-  city: tripCityInputSchema.extend({ name: z.string(), detail: z.string() }).nullable(),
+  city: tripCityInputSchema.extend({ name: z.string() }).nullable(),
 });
 
 /** Object URL for previewing a local file, revoked when the file changes or the component unmounts. */

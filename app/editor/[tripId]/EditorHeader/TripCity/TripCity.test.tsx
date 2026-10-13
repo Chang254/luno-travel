@@ -21,8 +21,7 @@ const noCity = { city_place_id: null, city_name: null, city_country_code: null }
 const kyotoColumns = { city_place_id: "place-kyoto", city_name: "Kyoto", city_country_code: "JP" };
 
 async function pickKyoto(user: ReturnType<typeof render>["user"]) {
-  await user.click(screen.getByRole("combobox", { name: "Trip city" }));
-  await user.type(screen.getByPlaceholderText("Search cities…"), "kyo");
+  await user.type(screen.getByRole("combobox", { name: "Trip city" }), "kyo");
   await user.click(await screen.findByRole("option", { name: /Kyoto/ }));
 }
 
@@ -39,7 +38,7 @@ describe("TripCity", () => {
   it("shows the saved city with its flag", () => {
     render(<TripCity tripId="trip-1" initialCity={kyotoColumns} />);
 
-    expect(screen.getByRole("combobox", { name: "Trip city" })).toHaveTextContent("Kyoto");
+    expect(screen.getByRole("combobox", { name: "Trip city" })).toHaveValue("Kyoto");
     expect(screen.getByRole("img", { name: "Japan" })).toBeInTheDocument();
   });
 
@@ -61,7 +60,7 @@ describe("TripCity", () => {
 
     await pickKyoto(user);
 
-    expect(screen.getByRole("combobox", { name: "Trip city" })).toHaveTextContent("Kyoto");
+    expect(screen.getByRole("combobox", { name: "Trip city" })).toHaveValue("Kyoto");
   });
 
   it("restores the previous city when saving fails", async () => {
@@ -70,17 +69,18 @@ describe("TripCity", () => {
 
     await pickKyoto(user);
 
-    expect(screen.getByRole("combobox", { name: "Trip city" })).toHaveTextContent("Add a city");
+    expect(screen.getByRole("combobox", { name: "Trip city" })).toHaveValue("");
   });
 
   it("clears the city", async () => {
     mutate.mockImplementation((_input, { onSuccess }) => onSuccess({ id: "trip-1", ...noCity }));
     const { user } = render(<TripCity tripId="trip-1" initialCity={kyotoColumns} />);
 
-    await user.click(screen.getByRole("button", { name: "Remove city" }));
+    await user.clear(screen.getByRole("combobox", { name: "Trip city" }));
+    await user.tab();
 
     expect(mutate).toHaveBeenCalledWith({ id: "trip-1", city: null }, expect.anything());
-    expect(screen.getByRole("combobox", { name: "Trip city" })).toHaveTextContent("Add a city");
+    expect(screen.getByRole("combobox", { name: "Trip city" })).toHaveValue("");
   });
 
   it("says when the city couldn't be saved", () => {

@@ -1,6 +1,6 @@
 /** @jest-environment node */
 
-import { fetchImageDataUrl } from "./ogImage.helpers";
+import { fetchImageDataUrl, getFlagDataUrl, getShareDescription } from "./ogImage.helpers";
 
 function mockFetch(response: Partial<Response> | Error) {
   global.fetch = jest.fn(() =>
@@ -45,5 +45,30 @@ describe("fetchImageDataUrl", () => {
 
   it("returns null without a url", async () => {
     await expect(fetchImageDataUrl(null)).resolves.toBeNull();
+  });
+});
+
+describe("getFlagDataUrl", () => {
+  it("returns an inline SVG for a country code", () => {
+    expect(getFlagDataUrl("jp")).toMatch(/^data:image\/svg\+xml;base64,/);
+  });
+
+  it("returns null for an unknown or missing code", () => {
+    expect(getFlagDataUrl("ZZ")).toBeNull();
+    expect(getFlagDataUrl(null)).toBeNull();
+  });
+});
+
+describe("getShareDescription", () => {
+  it("names the city and country", () => {
+    expect(getShareDescription("Kyoto", "JP")).toBe("A trip to Kyoto, Japan");
+  });
+
+  it("names just the city without a country", () => {
+    expect(getShareDescription("Kyoto", null)).toBe("A trip to Kyoto");
+  });
+
+  it("returns null without a city", () => {
+    expect(getShareDescription(null, "JP")).toBeNull();
   });
 });

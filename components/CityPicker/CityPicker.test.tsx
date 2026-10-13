@@ -33,17 +33,15 @@ describe("CityPicker", () => {
     const onSelect = jest.fn();
     const { user } = render(<CityPicker aria-label="City" value={null} onSelect={onSelect} />);
 
-    await user.click(screen.getByRole("combobox", { name: "City" }));
-    await user.type(screen.getByPlaceholderText("Search cities…"), "kyo");
+    await user.type(screen.getByRole("combobox", { name: "City" }), "kyo");
     await user.click(await screen.findByRole("option", { name: /Kyoto/ }));
 
     expect(onSelect).toHaveBeenCalledWith({
       placeId: "place-kyoto",
       sessionToken: expect.stringMatching(/^[0-9a-f-]{36}$/),
       name: "Kyoto",
-      detail: "Kyoto, Japan",
     });
-    expect(screen.queryByPlaceholderText("Search cities…")).not.toBeInTheDocument();
+    expect(screen.queryByRole("option")).not.toBeInTheDocument();
     expect(useCitySearch).toHaveBeenLastCalledWith("", expect.any(String));
   });
 
@@ -51,8 +49,7 @@ describe("CityPicker", () => {
     const onSelect = jest.fn();
     const { user } = render(<CityPicker value={null} onSelect={onSelect} />);
 
-    await user.click(screen.getByRole("combobox"));
-    await user.type(screen.getByPlaceholderText("Search cities…"), "kyo");
+    await user.type(screen.getByRole("combobox"), "kyo");
     await user.click(await screen.findByRole("option", { name: /Kyoto/ }));
 
     const firstToken = onSelect.mock.calls[0][0].sessionToken;
@@ -65,8 +62,7 @@ describe("CityPicker", () => {
   it("doesn't show results for a one-letter query", async () => {
     const { user } = render(<CityPicker value={null} onSelect={jest.fn()} />);
 
-    await user.click(screen.getByRole("combobox"));
-    await user.type(screen.getByPlaceholderText("Search cities…"), "k");
+    await user.type(screen.getByRole("combobox"), "k");
 
     await waitFor(() => expect(useCitySearch).toHaveBeenLastCalledWith("k", expect.any(String)));
     expect(screen.queryByRole("option")).not.toBeInTheDocument();
@@ -76,8 +72,7 @@ describe("CityPicker", () => {
     mockSearch({ data: [] });
     const { user } = render(<CityPicker value={null} onSelect={jest.fn()} />);
 
-    await user.click(screen.getByRole("combobox"));
-    await user.type(screen.getByPlaceholderText("Search cities…"), "zzz");
+    await user.type(screen.getByRole("combobox"), "zzz");
 
     expect(await screen.findByText("No cities found.")).toBeInTheDocument();
   });
@@ -86,22 +81,66 @@ describe("CityPicker", () => {
     mockSearch({ data: undefined, isError: true });
     const { user } = render(<CityPicker value={null} onSelect={jest.fn()} />);
 
-    await user.click(screen.getByRole("combobox"));
-    await user.type(screen.getByPlaceholderText("Search cities…"), "kyo");
+    await user.type(screen.getByRole("combobox"), "kyo");
 
     expect(await screen.findByText("Couldn't search cities. Try again.")).toBeInTheDocument();
   });
 
-  it("shows the current city with its flag and lets it be removed", async () => {
-    const onClear = jest.fn();
-    const { user } = render(
-      <CityPicker value={{ name: "Kyoto", countryCode: "JP" }} onSelect={jest.fn()} onClear={onClear} />,
-    );
+  it("shows the current city with its flag", () => {
+    render(<CityPicker value={{ name: "Kyoto", countryCode: "JP" }} onSelect={jest.fn()} />);
 
-    expect(screen.getByRole("combobox")).toHaveTextContent("Kyoto");
+    expect(screen.getByRole("combobox")).toHaveValue("Kyoto");
     expect(screen.getByRole("img", { name: "Japan" })).toHaveAttribute("src", "/flags/JP.svg");
+  });
 
-    await user.click(screen.getByRole("button", { name: "Remove city" }));
+  it("clears the city when the input is emptied and left", async () => {
+    const onClear = jest.fn();
+    const { user } = render(<CityPicker value={{ name: "Kyoto" }} onSelect={jest.fn()} onClear={onClear} />);
+
+    await user.clear(screen.getByRole("combobox"));
+    await user.tab();
+
     expect(onClear).toHaveBeenCalled();
+  });
+
+  it("clears the city on Enter in an empty input", async () => {
+    const onClear = jest.fn();
+    const { user } = render(<CityPicker value={{ name: "Kyoto" }} onSelect={jest.fn()} onClear={onClear} />);
+
+    await user.clear(screen.getByRole("combobox"));
+    await user.keyboard("{Enter}");
+
+    expect(onClear).toHaveBeenCalled();
+  });
+
+  it("restores the current city when left without picking", async () => {
+    const onClear = jest.fn();
+    const { user } = render(<CityPicker value={{ name: "Kyoto" }} onSelect={jest.fn()} onClear={onClear} />);
+
+    await user.type(screen.getByRole("combobox"), "{Control>}a{/Control}osa");
+    await user.tab();
+
+    expect(screen.getByRole("combobox")).toHaveValue("Kyoto");
+    expect(onClear).not.toHaveBeenCalled();
+  });
+
+  it("restores the current city on Escape", async () => {
+    const { user } = render(<CityPicker value={{ name: "Kyoto" }} onSelect={jest.fn()} />);
+
+    await user.clear(screen.getByRole("combobox"));
+    await user.keyboard("{Escape}");
+
+    expect(screen.getByRole("combobox")).toHaveValue("Kyoto");
+  });
+
+  it("picks the highlighted suggestion with the keyboard", async () => {
+    const onSelect = jest.fn();
+    const { user } = render(<CityPicker value={null} onSelect={onSelect} />);
+
+    await user.type(screen.getByRole("combobox"), "kyo");
+    await screen.findByRole("option", { name: /Kyotera/ });
+    await user.keyboard("{ArrowDown}{Enter}");
+
+    expect(onSelect).toHaveBeenCalledWith(expect.objectContaining({ placeId: "place-kyotera" }));
   });
 });

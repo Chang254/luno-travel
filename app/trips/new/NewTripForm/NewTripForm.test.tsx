@@ -78,10 +78,9 @@ describe("NewTripForm", () => {
     const { user } = render(<NewTripForm />);
 
     await user.type(screen.getByLabelText("Title"), "Kyoto");
-    await user.click(screen.getByLabelText("City (optional)"));
-    await user.type(screen.getByPlaceholderText("Search cities…"), "kyo");
+    await user.type(screen.getByLabelText("City (optional)"), "kyo");
     await user.click(await screen.findByRole("option", { name: /Kyoto/ }));
-    expect(screen.getByLabelText("City (optional)")).toHaveTextContent("Kyoto");
+    expect(screen.getByLabelText("City (optional)")).toHaveValue("Kyoto");
 
     await user.click(screen.getByRole("button", { name: "Create trip" }));
 
@@ -99,10 +98,10 @@ describe("NewTripForm", () => {
     const { user } = render(<NewTripForm />);
 
     await user.type(screen.getByLabelText("Title"), "Kyoto");
-    await user.click(screen.getByLabelText("City (optional)"));
-    await user.type(screen.getByPlaceholderText("Search cities…"), "kyo");
+    await user.type(screen.getByLabelText("City (optional)"), "kyo");
     await user.click(await screen.findByRole("option", { name: /Kyoto/ }));
-    await user.click(screen.getByRole("button", { name: "Remove city" }));
+    await user.clear(screen.getByLabelText("City (optional)"));
+    await user.tab();
     await user.click(screen.getByRole("button", { name: "Create trip" }));
 
     expect(mutate).toHaveBeenCalledWith(

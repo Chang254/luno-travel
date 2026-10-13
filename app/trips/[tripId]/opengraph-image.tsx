@@ -4,7 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getTripImageUrl } from "@/lib/supabase/storage";
 import { getPublishedTrip } from "@/server/services/trips.service";
 
-import { fetchImageDataUrl } from "./ogImage.helpers";
+import { fetchImageDataUrl, getFlagDataUrl } from "./ogImage.helpers";
 
 export const alt = "A trip on Luno Travel";
 export const size = { width: 1200, height: 630 };
@@ -19,8 +19,8 @@ interface ImageProps {
 }
 
 /**
- * Share card for a published trip: cover as backdrop, title, and the author
- * snapshotted at publish time. Inline styles are required here; `ImageResponse`
+ * Share card for a published trip: cover as backdrop, city with its flag,
+ * title, and the author snapshotted at publish time. Inline styles are required here; `ImageResponse`
  * doesn't support Tailwind class strings from `.styles.ts`.
  */
 export default async function Image({ params }: ImageProps) {
@@ -32,6 +32,7 @@ export default async function Image({ params }: ImageProps) {
     fetchImageDataUrl(trip?.cover_image_url ? getTripImageUrl(trip.cover_image_url) : null),
     fetchImageDataUrl(trip?.author_avatar_url ?? null),
   ]);
+  const flag = getFlagDataUrl(trip?.city_country_code ?? null);
 
   return new ImageResponse(
     (
@@ -72,6 +73,12 @@ export default async function Image({ params }: ImageProps) {
           <div style={{ fontSize: 22, letterSpacing: 6, textTransform: "uppercase", opacity: 0.85 }}>
             Luno Travel
           </div>
+          {trip?.city_name && (
+            <div style={{ display: "flex", alignItems: "center", gap: 16, fontSize: 30 }}>
+              {flag && <img src={flag} alt="" width={48} height={32} style={{ borderRadius: 4 }} />}
+              <span>{trip.city_name}</span>
+            </div>
+          )}
           <div style={{ fontSize: 72, fontWeight: 700, lineHeight: 1.1, display: "flex" }}>
             {trip?.title ?? "A travel journal"}
           </div>

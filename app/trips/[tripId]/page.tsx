@@ -6,6 +6,7 @@ import TripLoading from "@/components/TripLoading";
 import { createClient } from "@/lib/supabase/server";
 import { getPublishedTrip } from "@/server/services/trips.service";
 
+import { getShareDescription } from "./ogImage.helpers";
 import TripReader from "./TripReader";
 import { styles } from "./page.styles";
 
@@ -25,8 +26,10 @@ export async function generateMetadata({ params }: TripPageProps): Promise<Metad
 
   if (!trip) return {};
 
+  const description = getShareDescription(trip.city_name, trip.city_country_code) ?? undefined;
+
   // The share image comes from ./opengraph-image.tsx.
-  return { title: trip.title, openGraph: { title: trip.title } };
+  return { title: trip.title, description, openGraph: { title: trip.title, description } };
 }
 
 async function PublishedTrip({ params }: TripPageProps) {

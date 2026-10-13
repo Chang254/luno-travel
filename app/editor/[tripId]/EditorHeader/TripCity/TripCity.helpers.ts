@@ -21,7 +21,7 @@ export function useTripCity(tripId: string, initialCity: TripCity) {
 
   const save = (next: PickedCity | null) => {
     const previous = city;
-    setCity(next && { name: next.name, detail: next.detail });
+    setCity(next && { name: next.name });
     updateCity.mutate(
       { id: tripId, city: next && { placeId: next.placeId, sessionToken: next.sessionToken } },
       {
