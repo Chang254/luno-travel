@@ -1,7 +1,7 @@
 import { type RefObject, useEffect, useState } from "react";
 
-import { useCitySearch } from "@/lib/api/places";
-import type { CitySuggestion } from "@/server/models/places.types";
+import { useCitySearch } from "@/lib/api/cities";
+import type { CitySuggestion } from "@/server/models/cities.types";
 import type { TripCityInput } from "@/server/models/trips.types";
 
 const SEARCH_DEBOUNCE_MS = 250;
@@ -10,12 +10,12 @@ const MIN_QUERY_LENGTH = 2;
 /** What the input shows for the current city. */
 export interface CityPickerValue {
   name: string;
-  /** Known once the server has resolved the place. */
+  /** Shown as a flag when known. */
   countryCode?: string | null;
 }
 
-/** A picked suggestion: what the server needs to resolve it, plus a label to show meanwhile. */
-export type PickedCity = TripCityInput & Pick<CityPickerValue, "name">;
+/** A picked suggestion: what the server needs to resolve it, plus a label and flag to show meanwhile. */
+export type PickedCity = TripCityInput & CityPickerValue & { countryCode: string };
 
 export function useDebouncedValue<T>(value: T, delayMs: number): T {
   const [debounced, setDebounced] = useState(value);
@@ -50,20 +50,18 @@ interface UseCityPickerOptions {
 }
 
 /**
- * Search and edit state for the city combobox. One Google session token covers
- * every keystroke until a city is picked; picking starts a fresh session.
- * Emptying the input and leaving it (or pressing Enter) clears the city; any
- * other unpicked text reverts to the current city.
+ * Search and edit state for the city combobox. Emptying the input and leaving
+ * it (or pressing Enter) clears the city; any other unpicked text reverts to
+ * the current city.
  */
 export function useCityPicker({ value, onSelect, onClear }: UseCityPickerOptions) {
   const [open, setOpen] = useState(false);
   /** Null while not editing, so the input shows the current city. */
   const [query, setQuery] = useState<string | null>(null);
-  const [sessionToken, setSessionToken] = useState(() => crypto.randomUUID());
   const debouncedQuery = useDebouncedValue(query ?? "", SEARCH_DEBOUNCE_MS);
-  /** Closed means no search, so the stale debounced query can't fire on a fresh token after a pick. */
+  /** Closed means no search, so the stale debounced query doesn't fire again after a pick. */
   const searchQuery = open ? debouncedQuery : "";
-  const search = useCitySearch(searchQuery, sessionToken);
+  const search = useCitySearch(searchQuery);
   const suggestions = searchQuery.trim().length >= MIN_QUERY_LENGTH ? (search.data ?? []) : [];
 
   const reset = () => {
@@ -83,8 +81,11 @@ export function useCityPicker({ value, onSelect, onClear }: UseCityPickerOptions
   };
 
   const selectSuggestion = (suggestion: CitySuggestion) => {
-    onSelect({ placeId: suggestion.placeId, sessionToken, name: suggestion.primaryText });
-    setSessionToken(crypto.randomUUID());
+    onSelect({
+      geonameId: suggestion.geonameId,
+      name: suggestion.primaryText,
+      countryCode: suggestion.countryCode,
+    });
     reset();
   };
 

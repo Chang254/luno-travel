@@ -23,7 +23,7 @@ import {
   updateTripDetails,
   updateTripCover,
 } from "@/server/resources/trips.resource";
-import { getCityDetails } from "@/server/services/places.service";
+import { getCityDetails } from "@/server/services/cities.service";
 import {
   getRemovedCoverPaths,
   getRemovedImagePaths,
@@ -45,13 +45,14 @@ export async function getTripForUser(
   return findTripById(supabase, id, ownerId);
 }
 
-/** Looks the picked place up with Google so the stored name and country can't be forged. */
-async function resolveTripCity(city: TripCityInput): Promise<TripCity> {
-  const details = await getCityDetails(city.placeId, city.sessionToken);
+/** Looks the picked city up server-side so the stored name, country and coordinates can't be forged. */
+async function resolveTripCity({ geonameId }: TripCityInput): Promise<TripCity> {
+  const details = await getCityDetails(geonameId);
   return {
-    city_place_id: details.placeId,
     city_name: details.name,
     city_country_code: details.countryCode,
+    city_latitude: details.latitude,
+    city_longitude: details.longitude,
   };
 }
 
@@ -195,9 +196,10 @@ export async function publishTripForUser(
     title: trip.title,
     content: trip.content,
     cover_image_url: trip.cover_image_url,
-    city_place_id: trip.city_place_id,
     city_name: trip.city_name,
     city_country_code: trip.city_country_code,
+    city_latitude: trip.city_latitude,
+    city_longitude: trip.city_longitude,
     author_name: author.name,
     author_avatar_url: author.avatarUrl,
   });

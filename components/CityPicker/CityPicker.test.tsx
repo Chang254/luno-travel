@@ -1,11 +1,11 @@
-import { useCitySearch } from "@/lib/api/places";
+import { useCitySearch } from "@/lib/api/cities";
 import { render, screen, waitFor } from "@/lib/test-utils";
 import CityPicker from "./CityPicker";
 
-jest.mock("@/lib/api/places");
+jest.mock("@/lib/api/cities");
 
-const kyoto = { placeId: "place-kyoto", primaryText: "Kyoto", secondaryText: "Kyoto, Japan" };
-const kyotera = { placeId: "place-kyotera", primaryText: "Kyotera", secondaryText: "Uganda" };
+const kyoto = { geonameId: 1857910, primaryText: "Kyoto", secondaryText: "Kyoto, Japan", countryCode: "JP" };
+const kyotera = { geonameId: 226110, primaryText: "Kyotera", secondaryText: "Uganda", countryCode: "UG" };
 
 function mockSearch(state: Partial<ReturnType<typeof useCitySearch>> = {}) {
   jest.mocked(useCitySearch).mockImplementation(
@@ -17,11 +17,6 @@ function mockSearch(state: Partial<ReturnType<typeof useCitySearch>> = {}) {
         ...state,
       }) as unknown as ReturnType<typeof useCitySearch>,
   );
-}
-
-/** Session tokens passed to the search hook, in call order. */
-function searchedTokens() {
-  return jest.mocked(useCitySearch).mock.calls.map(([, token]) => token);
 }
 
 describe("CityPicker", () => {
@@ -37,26 +32,12 @@ describe("CityPicker", () => {
     await user.click(await screen.findByRole("option", { name: /Kyoto/ }));
 
     expect(onSelect).toHaveBeenCalledWith({
-      placeId: "place-kyoto",
-      sessionToken: expect.stringMatching(/^[0-9a-f-]{36}$/),
+      geonameId: 1857910,
       name: "Kyoto",
+      countryCode: "JP",
     });
     expect(screen.queryByRole("option")).not.toBeInTheDocument();
-    expect(useCitySearch).toHaveBeenLastCalledWith("", expect.any(String));
-  });
-
-  it("uses one session token per search and a fresh one after a pick", async () => {
-    const onSelect = jest.fn();
-    const { user } = render(<CityPicker value={null} onSelect={onSelect} />);
-
-    await user.type(screen.getByRole("combobox"), "kyo");
-    await user.click(await screen.findByRole("option", { name: /Kyoto/ }));
-
-    const firstToken = onSelect.mock.calls[0][0].sessionToken;
-    const tokens = searchedTokens();
-    const pickIndex = tokens.lastIndexOf(firstToken);
-    expect(tokens.slice(0, pickIndex + 1).every((token) => token === firstToken)).toBe(true);
-    expect(tokens.at(-1)).not.toBe(firstToken);
+    expect(useCitySearch).toHaveBeenLastCalledWith("");
   });
 
   it("doesn't show results for a one-letter query", async () => {
@@ -64,7 +45,7 @@ describe("CityPicker", () => {
 
     await user.type(screen.getByRole("combobox"), "k");
 
-    await waitFor(() => expect(useCitySearch).toHaveBeenLastCalledWith("k", expect.any(String)));
+    await waitFor(() => expect(useCitySearch).toHaveBeenLastCalledWith("k"));
     expect(screen.queryByRole("option")).not.toBeInTheDocument();
   });
 
@@ -141,6 +122,6 @@ describe("CityPicker", () => {
     await screen.findByRole("option", { name: /Kyotera/ });
     await user.keyboard("{ArrowDown}{Enter}");
 
-    expect(onSelect).toHaveBeenCalledWith(expect.objectContaining({ placeId: "place-kyotera" }));
+    expect(onSelect).toHaveBeenCalledWith(expect.objectContaining({ geonameId: 226110 }));
   });
 });

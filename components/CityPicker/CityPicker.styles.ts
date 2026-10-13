@@ -11,5 +11,4 @@ export const styles = {
   suggestionDetail:
     "truncate text-xs text-muted-foreground group-data-[selected=true]:text-accent-foreground/80",
   status: "py-6 text-center text-sm text-muted-foreground",
-  attribution: "border-t px-3 py-1.5 text-right text-[10px] text-muted-foreground",
 };

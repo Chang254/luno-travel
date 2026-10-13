@@ -18,9 +18,10 @@ const trip = {
   title: "Kyoto",
   content: {},
   cover_image_url: null,
-  city_place_id: "place-kyoto",
   city_name: "Kyoto",
   city_country_code: "JP",
+  city_latitude: 35.02107,
+  city_longitude: 135.75385,
   created_at: "2026-01-01T00:00:00.000Z",
   updated_at: "2026-01-01T00:00:00.000Z",
 };

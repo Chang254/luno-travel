@@ -1,9 +1,9 @@
 import { router } from "@/server/trpc/trpc";
-import { placesRouter } from "@/server/trpc/routers/places";
+import { citiesRouter } from "@/server/trpc/routers/cities";
 import { tripsRouter } from "@/server/trpc/routers/trips";
 
 export const appRouter = router({
-  places: placesRouter,
+  cities: citiesRouter,
   trips: tripsRouter,
 });
 

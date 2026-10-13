@@ -29,7 +29,7 @@ interface CityPickerProps {
 }
 
 /**
- * City combobox backed by Google Places autocomplete: type into the input and
+ * City combobox backed by the GeoNames city list: type into the input and
  * pick from the suggestions below it. A plain input (not cmdk's, which
  * overrides `id` and labelling) with cmdk handling list navigation.
  */
@@ -125,8 +125,8 @@ export default function CityPicker({
                 <CommandGroup>
                   {suggestions.map((suggestion) => (
                     <CommandItem
-                      key={suggestion.placeId}
-                      value={suggestion.placeId}
+                      key={suggestion.geonameId}
+                      value={String(suggestion.geonameId)}
                       className={styles.option}
                       onSelect={() => selectSuggestion(suggestion)}
                     >
@@ -140,7 +140,6 @@ export default function CityPicker({
                 </CommandGroup>
               )}
             </CommandList>
-            <p className={styles.attribution}>Powered by Google</p>
           </div>
         </PopoverContent>
       </Popover>

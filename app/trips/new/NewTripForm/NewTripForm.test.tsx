@@ -1,12 +1,12 @@
 import userEvent from "@testing-library/user-event";
 
-import { useCitySearch } from "@/lib/api/places";
+import { useCitySearch } from "@/lib/api/cities";
 import { useCreateTrip } from "@/lib/api/trips";
 import { render, screen } from "@/lib/test-utils";
 import NewTripForm from "./NewTripForm";
 
 jest.mock("@/lib/api/trips");
-jest.mock("@/lib/api/places");
+jest.mock("@/lib/api/cities");
 
 const mockPush = jest.fn();
 jest.mock("next/navigation", () => ({
@@ -35,7 +35,7 @@ describe("NewTripForm", () => {
   beforeEach(() => {
     mockCreateTrip();
     jest.mocked(useCitySearch).mockReturnValue({
-      data: [{ placeId: "place-kyoto", primaryText: "Kyoto", secondaryText: "Kyoto, Japan" }],
+      data: [{ geonameId: 1857910, primaryText: "Kyoto", secondaryText: "Kyoto, Japan", countryCode: "JP" }],
       isFetching: false,
       isError: false,
     } as unknown as ReturnType<typeof useCitySearch>);
@@ -46,7 +46,7 @@ describe("NewTripForm", () => {
     await user.click(await screen.findByRole("option", { name: /Kyoto/ }));
   }
 
-  const kyotoInput = { placeId: "place-kyoto", sessionToken: expect.any(String) };
+  const kyotoInput = { geonameId: 1857910 };
 
   it("disables submit until a title and place are given", async () => {
     const { user } = render(<NewTripForm />);
@@ -74,6 +74,7 @@ describe("NewTripForm", () => {
     await user.type(screen.getByLabelText("Title"), "  Kyoto  ");
     await pickKyoto(user);
     expect(screen.getByLabelText("Place")).toHaveValue("Kyoto");
+    expect(screen.getByRole("img", { name: "Japan" })).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Create trip" }));
 
     expect(mutate).toHaveBeenCalledWith(

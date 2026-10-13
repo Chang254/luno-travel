@@ -19,8 +19,9 @@ export type Database = {
           author_avatar_url: string | null
           author_name: string | null
           city_country_code: string | null
+          city_latitude: number | null
+          city_longitude: number | null
           city_name: string | null
-          city_place_id: string | null
           content: Json
           cover_image_url: string | null
           owner_id: string
@@ -32,8 +33,9 @@ export type Database = {
           author_avatar_url?: string | null
           author_name?: string | null
           city_country_code?: string | null
+          city_latitude?: number | null
+          city_longitude?: number | null
           city_name?: string | null
-          city_place_id?: string | null
           content: Json
           cover_image_url?: string | null
           owner_id: string
@@ -45,8 +47,9 @@ export type Database = {
           author_avatar_url?: string | null
           author_name?: string | null
           city_country_code?: string | null
+          city_latitude?: number | null
+          city_longitude?: number | null
           city_name?: string | null
-          city_place_id?: string | null
           content?: Json
           cover_image_url?: string | null
           owner_id?: string
@@ -67,8 +70,9 @@ export type Database = {
       trips: {
         Row: {
           city_country_code: string
+          city_latitude: number | null
+          city_longitude: number | null
           city_name: string
-          city_place_id: string
           content: Json
           cover_image_url: string | null
           created_at: string
@@ -79,8 +83,9 @@ export type Database = {
         }
         Insert: {
           city_country_code: string
+          city_latitude?: number | null
+          city_longitude?: number | null
           city_name: string
-          city_place_id: string
           content?: Json
           cover_image_url?: string | null
           created_at?: string
@@ -91,8 +96,9 @@ export type Database = {
         }
         Update: {
           city_country_code?: string
+          city_latitude?: number | null
+          city_longitude?: number | null
           city_name?: string
-          city_place_id?: string
           content?: Json
           cover_image_url?: string | null
           created_at?: string

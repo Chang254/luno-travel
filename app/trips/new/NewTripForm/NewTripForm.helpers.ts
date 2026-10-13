@@ -27,7 +27,7 @@ export function useNewTripForm() {
         title,
         // New trips only ever hold a local file.
         coverImage: coverImage instanceof File ? coverImage : null,
-        city: { placeId: city.placeId, sessionToken: city.sessionToken },
+        city: { geonameId: city.geonameId },
       },
       { onSuccess: (trip) => router.push(`/editor/${trip.id}`) },
     );

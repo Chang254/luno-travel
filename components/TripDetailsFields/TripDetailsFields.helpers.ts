@@ -29,13 +29,13 @@ const placeLabelShape = { name: z.string(), countryCode: z.string().nullable().o
 
 /**
  * Title, place and cover shared by the new-trip form and the editor's details
- * dialog. A place carries `sessionToken` only when freshly picked, so an
- * unchanged place isn't re-resolved with Google.
+ * dialog. A place carries `geonameId` only when freshly picked, so an
+ * unchanged place isn't re-resolved.
  */
 export const tripDetailsFormSchema = z.object({
   title: tripTitleSchema,
   city: z.object(
-    { ...placeLabelShape, placeId: z.string(), sessionToken: z.string().optional() },
+    { ...placeLabelShape, geonameId: z.number().optional() },
     { error: PLACE_REQUIRED },
   ),
   coverImage: coverImageSchema,

@@ -15,25 +15,21 @@ import type { TripDetailsColumns } from "../TripDetails.helpers";
 export function toFormValues(details: TripDetailsColumns): TripDetailsFormInput {
   return {
     title: details.title,
-    city: {
-      placeId: details.city_place_id,
-      name: details.city_name,
-      countryCode: details.city_country_code,
-    },
+    city: { name: details.city_name, countryCode: details.city_country_code },
     coverImage: details.cover_image_url,
   };
 }
 
 /**
  * The update to send: the place only when a new one was picked (it carries a
- * session token), and the cover only when it was replaced or removed.
+ * GeoNames id), and the cover only when it was replaced or removed.
  */
 export function toUpdateInput(tripId: string, values: z.output<typeof tripDetailsFormSchema>) {
   const { title, city, coverImage } = values;
   return {
     id: tripId,
     title,
-    city: city.sessionToken ? { placeId: city.placeId, sessionToken: city.sessionToken } : undefined,
+    city: city.geonameId === undefined ? undefined : { geonameId: city.geonameId },
     coverImage: typeof coverImage === "string" ? undefined : coverImage,
   };
 }

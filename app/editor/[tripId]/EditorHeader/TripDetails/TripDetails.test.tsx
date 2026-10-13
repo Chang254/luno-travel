@@ -1,9 +1,9 @@
-import { useCitySearch } from "@/lib/api/places";
+import { useCitySearch } from "@/lib/api/cities";
 import { useUpdateTripDetails } from "@/lib/api/trips";
 import { render, screen, within } from "@/lib/test-utils";
 import TripDetails from "./TripDetails";
 
-jest.mock("@/lib/api/places");
+jest.mock("@/lib/api/cities");
 jest.mock("@/lib/api/trips");
 
 const mutate = jest.fn();
@@ -22,7 +22,6 @@ function mockUpdateDetails(state: Partial<ReturnType<typeof useUpdateTripDetails
 const details = {
   title: "Summer in Kyoto",
   cover_image_url: "user-1/trip-1/cover.png",
-  city_place_id: "place-kyoto",
   city_name: "Kyoto",
   city_country_code: "JP",
 };
@@ -43,7 +42,7 @@ describe("TripDetails", () => {
   beforeEach(() => {
     mockUpdateDetails();
     jest.mocked(useCitySearch).mockReturnValue({
-      data: [{ placeId: "place-osaka", primaryText: "Osaka", secondaryText: "Osaka, Japan" }],
+      data: [{ geonameId: 1853909, primaryText: "Osaka", secondaryText: "Osaka, Japan", countryCode: "JP" }],
       isFetching: false,
       isError: false,
     } as unknown as ReturnType<typeof useCitySearch>);
@@ -97,7 +96,7 @@ describe("TripDetails", () => {
       {
         id: "trip-1",
         title: "Summer in Kyoto",
-        city: { placeId: "place-osaka", sessionToken: expect.any(String) },
+        city: { geonameId: 1853909 },
         coverImage: undefined,
       },
       expect.anything(),
