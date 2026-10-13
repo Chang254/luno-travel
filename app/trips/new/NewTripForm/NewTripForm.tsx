@@ -4,6 +4,7 @@ import { useRef } from "react";
 import { Controller } from "react-hook-form";
 import { ImagePlus, X } from "lucide-react";
 
+import CityPicker from "@/components/CityPicker";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Field, FieldError, FieldLabel } from "@/components/ui/field";
@@ -20,7 +21,7 @@ export default function NewTripForm() {
     <Card>
       <CardHeader>
         <CardTitle className={styles.cardTitle}>New trip</CardTitle>
-        <CardDescription>Give your trip a name and, if you like, a cover photo.</CardDescription>
+        <CardDescription>Give your trip a name and, if you like, a city and cover photo.</CardDescription>
       </CardHeader>
       <CardContent>
         <form className={styles.form} onSubmit={onSubmit}>
@@ -37,6 +38,22 @@ export default function NewTripForm() {
                   placeholder="Summer in Kyoto"
                   maxLength={200}
                   autoFocus
+                />
+              </Field>
+            )}
+          />
+
+          <Controller
+            name="city"
+            control={form.control}
+            render={({ field }) => (
+              <Field>
+                <FieldLabel htmlFor="trip-city">City (optional)</FieldLabel>
+                <CityPicker
+                  id="trip-city"
+                  value={field.value}
+                  onSelect={field.onChange}
+                  onClear={() => field.onChange(null)}
                 />
               </Field>
             )}

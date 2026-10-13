@@ -2,6 +2,7 @@ import {
   findTripById,
   findTripsByOwnerId,
   insertTrip,
+  updateTripCity,
   updateTripContent,
   updateTripCover,
 } from "../resources/trips.resource";
@@ -11,6 +12,7 @@ import {
   upsertPublishedTrip,
 } from "../resources/publishedTrips.resource";
 import { removeImages } from "../resources/tripImages.resource";
+import { getCityDetails } from "./places.service";
 import {
   createTripForUser,
   getPublicationForUser,
@@ -18,6 +20,7 @@ import {
   getTripsForUser,
   publishTripForUser,
   unpublishTripForUser,
+  updateTripCityForUser,
   updateTripContentForUser,
   updateTripCoverForUser,
 } from "./trips.service";
@@ -25,6 +28,7 @@ import {
 jest.mock("../resources/trips.resource");
 jest.mock("../resources/publishedTrips.resource");
 jest.mock("../resources/tripImages.resource");
+jest.mock("./places.service");
 
 const trip = {
   id: "trip-1",
@@ -32,6 +36,9 @@ const trip = {
   title: "Kyoto",
   content: {},
   cover_image_url: null,
+  city_place_id: null,
+  city_name: null,
+  city_country_code: null,
   created_at: "2026-01-01T00:00:00.000Z",
   updated_at: "2026-01-01T00:00:00.000Z",
 };
@@ -84,6 +91,9 @@ const publishedTrip = {
   title: "Kyoto",
   content: {},
   cover_image_url: null,
+  city_place_id: null,
+  city_name: null,
+  city_country_code: null,
   author_name: "Ada Lovelace",
   author_avatar_url: "https://example.com/ada.png",
   published_at: "2026-01-02T00:00:00.000Z",
@@ -96,6 +106,11 @@ function contentWithImages(...srcs: string[]) {
 }
 
 const supabase = {} as Parameters<typeof updateTripContentForUser>[0];
+
+const sessionToken = "6f1c1b7e-4d2a-4c8e-9a51-2f3b4c5d6e7f";
+const cityInput = { placeId: "place-kyoto", sessionToken };
+const kyoto = { placeId: "place-kyoto", name: "Kyoto", countryCode: "JP" };
+const kyotoColumns = { city_place_id: "place-kyoto", city_name: "Kyoto", city_country_code: "JP" };
 
 describe("updateTripContentForUser", () => {
   beforeEach(() => {
@@ -194,6 +209,51 @@ describe("createTripForUser", () => {
     expect(insertTrip).toHaveBeenCalledWith(supabase, "user-1", "Kyoto");
     expect(result).toEqual(trip);
   });
+
+  it("stores the city Google resolves for the picked place", async () => {
+    jest.mocked(getCityDetails).mockResolvedValue(kyoto);
+    jest.mocked(insertTrip).mockResolvedValue({ ...trip, ...kyotoColumns });
+
+    await createTripForUser(supabase, "user-1", "Kyoto", cityInput);
+
+    expect(getCityDetails).toHaveBeenCalledWith("place-kyoto", sessionToken);
+    expect(insertTrip).toHaveBeenCalledWith(supabase, "user-1", "Kyoto", kyotoColumns);
+  });
+
+  it("doesn't create the trip when the city can't be resolved", async () => {
+    jest.mocked(getCityDetails).mockRejectedValue(new Error("Places down"));
+
+    await expect(createTripForUser(supabase, "user-1", "Kyoto", cityInput)).rejects.toThrow(
+      "Places down",
+    );
+    expect(insertTrip).not.toHaveBeenCalled();
+  });
+});
+
+describe("updateTripCityForUser", () => {
+  it("sets the city Google resolves for the picked place", async () => {
+    jest.mocked(getCityDetails).mockResolvedValue(kyoto);
+    const updatedTrip = { ...trip, ...kyotoColumns };
+    jest.mocked(updateTripCity).mockResolvedValue(updatedTrip);
+
+    const result = await updateTripCityForUser(supabase, "trip-1", "user-1", cityInput);
+
+    expect(updateTripCity).toHaveBeenCalledWith(supabase, "trip-1", "user-1", kyotoColumns);
+    expect(result).toEqual(updatedTrip);
+  });
+
+  it("clears the city without calling Google", async () => {
+    jest.mocked(updateTripCity).mockResolvedValue(trip);
+
+    await updateTripCityForUser(supabase, "trip-1", "user-1", null);
+
+    expect(getCityDetails).not.toHaveBeenCalled();
+    expect(updateTripCity).toHaveBeenCalledWith(supabase, "trip-1", "user-1", {
+      city_place_id: null,
+      city_name: null,
+      city_country_code: null,
+    });
+  });
 });
 
 describe("updateTripCoverForUser", () => {
@@ -234,11 +294,11 @@ describe("getPublicationForUser", () => {
 });
 
 describe("publishTripForUser", () => {
-  it("snapshots the saved draft's title, content, cover and author", async () => {
+  it("snapshots the saved draft's title, content, cover, city and author", async () => {
     const content = contentWithImages("user-1/trip-1/a.png");
     jest
       .mocked(findTripById)
-      .mockResolvedValue({ ...trip, content, cover_image_url: "user-1/trip-1/cover.png" });
+      .mockResolvedValue({ ...trip, ...kyotoColumns, content, cover_image_url: "user-1/trip-1/cover.png" });
     jest.mocked(findPublishedTripById).mockResolvedValue(null);
     jest.mocked(upsertPublishedTrip).mockResolvedValue({ ...publishedTrip, content });
 
@@ -250,6 +310,7 @@ describe("publishTripForUser", () => {
       title: "Kyoto",
       content,
       cover_image_url: "user-1/trip-1/cover.png",
+      ...kyotoColumns,
       author_name: "Ada Lovelace",
       author_avatar_url: "https://example.com/ada.png",
     });

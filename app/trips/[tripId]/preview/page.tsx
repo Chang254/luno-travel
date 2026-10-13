@@ -32,7 +32,13 @@ async function DraftPreview({ params }: PreviewPageProps) {
   return (
     <>
       <PreviewBar tripId={trip.id} />
-      <TripReader title={trip.title} coverImagePath={trip.cover_image_url} content={trip.content} />
+      <TripReader
+        title={trip.title}
+        coverImagePath={trip.cover_image_url}
+        content={trip.content}
+        cityName={trip.city_name}
+        cityCountryCode={trip.city_country_code}
+      />
     </>
   );
 }

@@ -3,7 +3,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/supabase/database.types";
 import type { UserProfile } from "@/lib/auth/userProfile";
 import type { PublishedTrip } from "@/server/models/publishedTrips.types";
-import type { Trip } from "@/server/models/trips.types";
+import type { Trip, TripCity, TripCityInput } from "@/server/models/trips.types";
 import {
   deletePublishedTrip,
   findPublishedTripById,
@@ -14,9 +14,11 @@ import {
   findTripById,
   findTripsByOwnerId,
   insertTrip,
+  updateTripCity,
   updateTripContent,
   updateTripCover,
 } from "@/server/resources/trips.resource";
+import { getCityDetails } from "@/server/services/places.service";
 import { getRemovedImagePaths, getTripImageFolder } from "@/server/services/tripImages.service";
 
 export async function getTripsForUser(
@@ -34,12 +36,37 @@ export async function getTripForUser(
   return findTripById(supabase, id, ownerId);
 }
 
+const NO_CITY: TripCity = { city_place_id: null, city_name: null, city_country_code: null };
+
+/** Looks the picked place up with Google so the stored name and country can't be forged. */
+async function resolveTripCity(city: TripCityInput | null): Promise<TripCity> {
+  if (!city) return NO_CITY;
+
+  const details = await getCityDetails(city.placeId, city.sessionToken);
+  return {
+    city_place_id: details.placeId,
+    city_name: details.name,
+    city_country_code: details.countryCode,
+  };
+}
+
 export async function createTripForUser(
   supabase: SupabaseClient<Database>,
   ownerId: string,
   title: string,
+  city?: TripCityInput,
 ): Promise<Trip> {
-  return insertTrip(supabase, ownerId, title);
+  if (!city) return insertTrip(supabase, ownerId, title);
+  return insertTrip(supabase, ownerId, title, await resolveTripCity(city));
+}
+
+export async function updateTripCityForUser(
+  supabase: SupabaseClient<Database>,
+  id: string,
+  ownerId: string,
+  city: TripCityInput | null,
+): Promise<Trip> {
+  return updateTripCity(supabase, id, ownerId, await resolveTripCity(city));
 }
 
 /**
@@ -140,6 +167,9 @@ export async function publishTripForUser(
     title: trip.title,
     content: trip.content,
     cover_image_url: trip.cover_image_url,
+    city_place_id: trip.city_place_id,
+    city_name: trip.city_name,
+    city_country_code: trip.city_country_code,
     author_name: author.name,
     author_avatar_url: author.avatarUrl,
   });

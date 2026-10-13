@@ -11,6 +11,7 @@ import {
   getInitialEditorState,
 } from "@/lib/lexical/tripContent";
 import { tripContentStyles } from "@/lib/lexical/tripContent.styles";
+import CountryFlag from "@/components/CountryFlag";
 import { getTripImageUrl } from "@/lib/supabase/storage";
 import type { Trip } from "@/server/models/trips.types";
 
@@ -21,10 +22,19 @@ interface TripReaderProps {
   /** Object path in the trip images bucket. */
   coverImagePath?: string | null;
   content: Trip["content"];
+  cityName?: string | null;
+  /** ISO-2 code; shown as a flag beside the city. */
+  cityCountryCode?: string | null;
 }
 
 /** Read-only render of trip content with the editor's own nodes and theme, so it matches the editor. */
-export default function TripReader({ title, coverImagePath, content }: TripReaderProps) {
+export default function TripReader({
+  title,
+  coverImagePath,
+  content,
+  cityName,
+  cityCountryCode,
+}: TripReaderProps) {
   const readerExtension = useMemo(
     () =>
       defineExtension({
@@ -48,6 +58,12 @@ export default function TripReader({ title, coverImagePath, content }: TripReade
         />
       )}
       <h1 className={styles.title}>{title}</h1>
+      {cityName && (
+        <p className={styles.city}>
+          {cityCountryCode && <CountryFlag countryCode={cityCountryCode} />}
+          {cityName}
+        </p>
+      )}
       <LexicalExtensionComposer
         extension={readerExtension}
         contentEditable={<ContentEditable className={tripContentStyles.surface} />}

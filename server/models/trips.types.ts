@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 import type { Tables } from "@/lib/supabase/database.types";
+import { placesSessionTokenSchema } from "@/server/models/places.types";
 
 export type Trip = { [K in keyof Tables<"trips">]: Tables<"trips">[K] };
 
@@ -16,8 +17,26 @@ export const updateTripContentInputSchema = z.object({
   content: z.record(z.string(), z.any()),
 });
 
+/** The trip's city columns; the name and country code are display copies of `city_place_id`. */
+export type TripCity = Pick<Trip, "city_place_id" | "city_name" | "city_country_code">;
+
+/** A picked autocomplete suggestion; the server resolves its name and country. */
+export const tripCityInputSchema = z.object({
+  placeId: z.string().min(1),
+  sessionToken: placesSessionTokenSchema,
+});
+
+export type TripCityInput = z.infer<typeof tripCityInputSchema>;
+
 export const createTripInputSchema = z.object({
   title: z.string().trim().min(1).max(200),
+  city: tripCityInputSchema.optional(),
+});
+
+export const updateTripCityInputSchema = z.object({
+  id: z.string(),
+  /** `null` clears the city. */
+  city: tripCityInputSchema.nullable(),
 });
 
 export const updateTripCoverInputSchema = z.object({

@@ -8,6 +8,7 @@ Required env (see [`.env.example`](.env.example)):
 
 - `NEXT_PUBLIC_SUPABASE_URL`
 - `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
+- `GOOGLE_MAPS_API_KEY` — server-only, used by `server/resources/places.resource.ts` for city autocomplete
 
 Coding patterns (folder structure, typing, comments, Tailwind in `.styles.ts`) live in [CONVENTIONS.md](CONVENTIONS.md). Follow that document before adding new code.
 

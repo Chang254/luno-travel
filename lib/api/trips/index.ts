@@ -6,3 +6,4 @@ export { useCreateTrip } from "./useCreateTrip";
 export { usePublication } from "./usePublication";
 export { usePublishTrip } from "./usePublishTrip";
 export { useUnpublishTrip } from "./useUnpublishTrip";
+export { useUpdateTripCity } from "./useUpdateTripCity";

@@ -17,6 +17,9 @@ const trip = {
   title: "Kyoto",
   content: {},
   cover_image_url: null,
+  city_place_id: null,
+  city_name: null,
+  city_country_code: null,
   created_at: "2026-01-01T00:00:00.000Z",
   updated_at: "2026-01-01T00:00:00.000Z",
 };
