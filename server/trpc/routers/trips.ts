@@ -8,16 +8,16 @@ import {
   getTripsForUser,
   publishTripForUser,
   unpublishTripForUser,
-  updateTripCityForUser,
   updateTripContentForUser,
+  updateTripDetailsForUser,
   updateTripCoverForUser,
 } from "@/server/services/trips.service";
 import { createImageUploadForUser } from "@/server/services/tripImages.service";
 import {
   createTripInputSchema,
   getTripInputSchema,
-  updateTripCityInputSchema,
   updateTripContentInputSchema,
+  updateTripDetailsInputSchema,
   updateTripCoverInputSchema,
 } from "@/server/models/trips.types";
 import { createImageUploadInputSchema } from "@/server/models/tripImages.types";
@@ -41,9 +41,11 @@ export const tripsRouter = router({
       return updateTripCoverForUser(ctx.supabase, input.id, ctx.user.sub, input.coverImagePath);
     }),
 
-  updateCity: protectedProcedure.input(updateTripCityInputSchema).mutation(({ ctx, input }) => {
-    return updateTripCityForUser(ctx.supabase, input.id, ctx.user.sub, input.city);
-  }),
+  updateDetails: protectedProcedure
+    .input(updateTripDetailsInputSchema)
+    .mutation(({ ctx, input: { id, ...details } }) => {
+      return updateTripDetailsForUser(ctx.supabase, id, ctx.user.sub, details);
+    }),
 
   updateContent: protectedProcedure
     .input(updateTripContentInputSchema)

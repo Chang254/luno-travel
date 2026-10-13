@@ -73,3 +73,18 @@ export function getRemovedImagePaths(
     (path) => path.startsWith(folder) && !path.includes("..") && !keptPaths.has(path),
   );
 }
+
+/**
+ * The previous cover's path when nothing in `retained` (the draft's or the
+ * published snapshot's cover) still uses it, limited to this trip's folder.
+ */
+export function getRemovedCoverPaths(
+  previous: string | null | undefined,
+  ownerId: string,
+  tripId: string,
+  retained: (string | null | undefined)[],
+): string[] {
+  const folder = getTripImageFolder(ownerId, tripId);
+  if (!previous || !previous.startsWith(folder) || previous.includes("..")) return [];
+  return retained.includes(previous) ? [] : [previous];
+}

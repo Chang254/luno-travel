@@ -41,25 +41,43 @@ describe("NewTripForm", () => {
     } as unknown as ReturnType<typeof useCitySearch>);
   });
 
-  it("disables submit until a title is entered", async () => {
+  async function pickKyoto(user: ReturnType<typeof render>["user"]) {
+    await user.type(screen.getByLabelText("Place"), "kyo");
+    await user.click(await screen.findByRole("option", { name: /Kyoto/ }));
+  }
+
+  const kyotoInput = { placeId: "place-kyoto", sessionToken: expect.any(String) };
+
+  it("disables submit until a title and place are given", async () => {
     const { user } = render(<NewTripForm />);
     const submit = screen.getByRole("button", { name: "Create trip" });
 
     expect(submit).toBeDisabled();
     await user.type(screen.getByLabelText("Title"), "   ");
+    await pickKyoto(user);
     expect(submit).toBeDisabled();
     await user.type(screen.getByLabelText("Title"), "Kyoto");
     expect(submit).toBeEnabled();
   });
 
-  it("creates a trip with just a title", async () => {
+  it("requires a place", async () => {
+    const { user } = render(<NewTripForm />);
+
+    await user.type(screen.getByLabelText("Title"), "Kyoto");
+
+    expect(screen.getByRole("button", { name: "Create trip" })).toBeDisabled();
+  });
+
+  it("creates a trip with a title and place, sending only what the server needs to resolve it", async () => {
     const { user } = render(<NewTripForm />);
 
     await user.type(screen.getByLabelText("Title"), "  Kyoto  ");
+    await pickKyoto(user);
+    expect(screen.getByLabelText("Place")).toHaveValue("Kyoto");
     await user.click(screen.getByRole("button", { name: "Create trip" }));
 
     expect(mutate).toHaveBeenCalledWith(
-      { title: "Kyoto", coverImage: null, city: null },
+      { title: "Kyoto", coverImage: null, city: kyotoInput },
       expect.anything(),
     );
   });
@@ -68,46 +86,26 @@ describe("NewTripForm", () => {
     const { user } = render(<NewTripForm />);
 
     await user.type(screen.getByLabelText("Title"), "Kyoto");
+    await pickKyoto(user);
     await user.upload(screen.getByLabelText("Cover photo (optional)"), cover);
     await user.click(screen.getByRole("button", { name: "Create trip" }));
 
-    expect(mutate).toHaveBeenCalledWith({ title: "Kyoto", coverImage: cover, city: null }, expect.anything());
-  });
-
-  it("creates a trip with a city, sending only what the server needs to resolve it", async () => {
-    const { user } = render(<NewTripForm />);
-
-    await user.type(screen.getByLabelText("Title"), "Kyoto");
-    await user.type(screen.getByLabelText("City (optional)"), "kyo");
-    await user.click(await screen.findByRole("option", { name: /Kyoto/ }));
-    expect(screen.getByLabelText("City (optional)")).toHaveValue("Kyoto");
-
-    await user.click(screen.getByRole("button", { name: "Create trip" }));
-
     expect(mutate).toHaveBeenCalledWith(
-      {
-        title: "Kyoto",
-        coverImage: null,
-        city: { placeId: "place-kyoto", sessionToken: expect.any(String) },
-      },
+      { title: "Kyoto", coverImage: cover, city: kyotoInput },
       expect.anything(),
     );
   });
 
-  it("lets a picked city be removed", async () => {
+  it("asks for a place again once a picked one is removed", async () => {
     const { user } = render(<NewTripForm />);
 
     await user.type(screen.getByLabelText("Title"), "Kyoto");
-    await user.type(screen.getByLabelText("City (optional)"), "kyo");
-    await user.click(await screen.findByRole("option", { name: /Kyoto/ }));
-    await user.clear(screen.getByLabelText("City (optional)"));
+    await pickKyoto(user);
+    await user.clear(screen.getByLabelText("Place"));
     await user.tab();
-    await user.click(screen.getByRole("button", { name: "Create trip" }));
 
-    expect(mutate).toHaveBeenCalledWith(
-      { title: "Kyoto", coverImage: null, city: null },
-      expect.anything(),
-    );
+    expect(await screen.findByText("Choose a place.")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Create trip" })).toBeDisabled();
   });
 
   it("previews the chosen cover and lets it be removed", async () => {
@@ -120,8 +118,12 @@ describe("NewTripForm", () => {
     expect(screen.queryByAltText("Cover preview")).not.toBeInTheDocument();
 
     await user.type(screen.getByLabelText("Title"), "Kyoto");
+    await pickKyoto(user);
     await user.click(screen.getByRole("button", { name: "Create trip" }));
-    expect(mutate).toHaveBeenCalledWith({ title: "Kyoto", coverImage: null, city: null }, expect.anything());
+    expect(mutate).toHaveBeenCalledWith(
+      { title: "Kyoto", coverImage: null, city: kyotoInput },
+      expect.anything(),
+    );
   });
 
   it("rejects unsupported file types", async () => {
@@ -142,6 +144,7 @@ describe("NewTripForm", () => {
     const { user } = render(<NewTripForm />);
 
     await user.type(screen.getByLabelText("Title"), "Kyoto");
+    await pickKyoto(user);
     await user.click(screen.getByRole("button", { name: "Create trip" }));
 
     expect(mockPush).toHaveBeenCalledWith("/editor/trip-1");

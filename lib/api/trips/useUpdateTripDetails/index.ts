@@ -1,0 +1,1 @@
+export { useUpdateTripDetails } from "./useUpdateTripDetails";

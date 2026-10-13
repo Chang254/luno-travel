@@ -2,8 +2,8 @@ import {
   findTripById,
   findTripsByOwnerId,
   insertTrip,
-  updateTripCity,
   updateTripContent,
+  updateTripDetails,
   updateTripCover,
 } from "../resources/trips.resource";
 import {
@@ -20,8 +20,8 @@ import {
   getTripsForUser,
   publishTripForUser,
   unpublishTripForUser,
-  updateTripCityForUser,
   updateTripContentForUser,
+  updateTripDetailsForUser,
   updateTripCoverForUser,
 } from "./trips.service";
 
@@ -36,9 +36,9 @@ const trip = {
   title: "Kyoto",
   content: {},
   cover_image_url: null,
-  city_place_id: null,
-  city_name: null,
-  city_country_code: null,
+  city_place_id: "place-kyoto",
+  city_name: "Kyoto",
+  city_country_code: "JP",
   created_at: "2026-01-01T00:00:00.000Z",
   updated_at: "2026-01-01T00:00:00.000Z",
 };
@@ -201,23 +201,15 @@ describe("updateTripContentForUser", () => {
 });
 
 describe("createTripForUser", () => {
-  it("inserts a trip owned by the given user with the given title", async () => {
-    jest.mocked(insertTrip).mockResolvedValue(trip);
-
-    const result = await createTripForUser(supabase, "user-1", "Kyoto");
-
-    expect(insertTrip).toHaveBeenCalledWith(supabase, "user-1", "Kyoto");
-    expect(result).toEqual(trip);
-  });
-
   it("stores the city Google resolves for the picked place", async () => {
     jest.mocked(getCityDetails).mockResolvedValue(kyoto);
-    jest.mocked(insertTrip).mockResolvedValue({ ...trip, ...kyotoColumns });
+    jest.mocked(insertTrip).mockResolvedValue(trip);
 
-    await createTripForUser(supabase, "user-1", "Kyoto", cityInput);
+    const result = await createTripForUser(supabase, "user-1", "Kyoto", cityInput);
 
     expect(getCityDetails).toHaveBeenCalledWith("place-kyoto", sessionToken);
     expect(insertTrip).toHaveBeenCalledWith(supabase, "user-1", "Kyoto", kyotoColumns);
+    expect(result).toEqual(trip);
   });
 
   it("doesn't create the trip when the city can't be resolved", async () => {
@@ -230,29 +222,97 @@ describe("createTripForUser", () => {
   });
 });
 
-describe("updateTripCityForUser", () => {
-  it("sets the city Google resolves for the picked place", async () => {
-    jest.mocked(getCityDetails).mockResolvedValue(kyoto);
-    const updatedTrip = { ...trip, ...kyotoColumns };
-    jest.mocked(updateTripCity).mockResolvedValue(updatedTrip);
+describe("updateTripDetailsForUser", () => {
+  const osaka = { placeId: "place-osaka", name: "Osaka", countryCode: "JP" };
+  const osakaInput = { placeId: "place-osaka", sessionToken };
+  const tripWithCover = { ...trip, cover_image_url: "user-1/trip-1/old.png" };
 
-    const result = await updateTripCityForUser(supabase, "trip-1", "user-1", cityInput);
+  beforeEach(() => {
+    jest.mocked(findTripById).mockResolvedValue(tripWithCover);
+    jest.mocked(findPublishedTripById).mockResolvedValue(null);
+  });
 
-    expect(updateTripCity).toHaveBeenCalledWith(supabase, "trip-1", "user-1", kyotoColumns);
+  it("saves just the title when nothing else changed", async () => {
+    const updatedTrip = { ...tripWithCover, title: "Kansai" };
+    jest.mocked(updateTripDetails).mockResolvedValue(updatedTrip);
+
+    const result = await updateTripDetailsForUser(supabase, "trip-1", "user-1", { title: "Kansai" });
+
+    expect(getCityDetails).not.toHaveBeenCalled();
+    expect(updateTripDetails).toHaveBeenCalledWith(supabase, "trip-1", "user-1", { title: "Kansai" });
+    expect(removeImages).not.toHaveBeenCalled();
     expect(result).toEqual(updatedTrip);
   });
 
-  it("clears the city without calling Google", async () => {
-    jest.mocked(updateTripCity).mockResolvedValue(trip);
+  it("stores the city Google resolves for a newly picked place", async () => {
+    jest.mocked(getCityDetails).mockResolvedValue(osaka);
+    jest.mocked(updateTripDetails).mockResolvedValue(tripWithCover);
 
-    await updateTripCityForUser(supabase, "trip-1", "user-1", null);
+    await updateTripDetailsForUser(supabase, "trip-1", "user-1", { title: "Kyoto", city: osakaInput });
 
-    expect(getCityDetails).not.toHaveBeenCalled();
-    expect(updateTripCity).toHaveBeenCalledWith(supabase, "trip-1", "user-1", {
-      city_place_id: null,
-      city_name: null,
-      city_country_code: null,
+    expect(getCityDetails).toHaveBeenCalledWith("place-osaka", sessionToken);
+    expect(updateTripDetails).toHaveBeenCalledWith(supabase, "trip-1", "user-1", {
+      title: "Kyoto",
+      city_place_id: "place-osaka",
+      city_name: "Osaka",
+      city_country_code: "JP",
     });
+  });
+
+  it("replaces the cover and removes the old one from storage", async () => {
+    jest
+      .mocked(updateTripDetails)
+      .mockResolvedValue({ ...trip, cover_image_url: "user-1/trip-1/new.png" });
+
+    await updateTripDetailsForUser(supabase, "trip-1", "user-1", {
+      title: "Kyoto",
+      coverImagePath: "user-1/trip-1/new.png",
+    });
+
+    expect(updateTripDetails).toHaveBeenCalledWith(supabase, "trip-1", "user-1", {
+      title: "Kyoto",
+      cover_image_url: "user-1/trip-1/new.png",
+    });
+    expect(removeImages).toHaveBeenCalledWith(supabase, ["user-1/trip-1/old.png"]);
+  });
+
+  it("removes the cover", async () => {
+    jest.mocked(updateTripDetails).mockResolvedValue(trip);
+
+    await updateTripDetailsForUser(supabase, "trip-1", "user-1", {
+      title: "Kyoto",
+      coverImagePath: null,
+    });
+
+    expect(updateTripDetails).toHaveBeenCalledWith(supabase, "trip-1", "user-1", {
+      title: "Kyoto",
+      cover_image_url: null,
+    });
+    expect(removeImages).toHaveBeenCalledWith(supabase, ["user-1/trip-1/old.png"]);
+  });
+
+  it("keeps the old cover while the published snapshot still shows it", async () => {
+    jest.mocked(updateTripDetails).mockResolvedValue(trip);
+    jest
+      .mocked(findPublishedTripById)
+      .mockResolvedValue({ ...publishedTrip, cover_image_url: "user-1/trip-1/old.png" });
+
+    await updateTripDetailsForUser(supabase, "trip-1", "user-1", {
+      title: "Kyoto",
+      coverImagePath: null,
+    });
+
+    expect(removeImages).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    ["another user's folder", "user-2/trip-1/cover.png"],
+    ["a path that escapes the folder", "user-1/trip-1/../../user-2/trip-9/cover.png"],
+  ])("rejects a cover in %s", async (_, path) => {
+    await expect(
+      updateTripDetailsForUser(supabase, "trip-1", "user-1", { title: "Kyoto", coverImagePath: path }),
+    ).rejects.toMatchObject({ code: "BAD_REQUEST" });
+    expect(updateTripDetails).not.toHaveBeenCalled();
   });
 });
 
@@ -298,7 +358,7 @@ describe("publishTripForUser", () => {
     const content = contentWithImages("user-1/trip-1/a.png");
     jest
       .mocked(findTripById)
-      .mockResolvedValue({ ...trip, ...kyotoColumns, content, cover_image_url: "user-1/trip-1/cover.png" });
+      .mockResolvedValue({ ...trip, content, cover_image_url: "user-1/trip-1/cover.png" });
     jest.mocked(findPublishedTripById).mockResolvedValue(null);
     jest.mocked(upsertPublishedTrip).mockResolvedValue({ ...publishedTrip, content });
 
@@ -333,6 +393,31 @@ describe("publishTripForUser", () => {
     expect(removeImages).toHaveBeenCalledWith(supabase, ["user-1/trip-1/a.png"]);
   });
 
+  it("removes the previous snapshot's cover once the draft no longer uses it", async () => {
+    jest
+      .mocked(findTripById)
+      .mockResolvedValue({ ...trip, cover_image_url: "user-1/trip-1/new.png" });
+    jest
+      .mocked(findPublishedTripById)
+      .mockResolvedValue({ ...publishedTrip, cover_image_url: "user-1/trip-1/old.png" });
+    jest.mocked(upsertPublishedTrip).mockResolvedValue(publishedTrip);
+
+    await publishTripForUser(supabase, "trip-1", "user-1", author);
+
+    expect(removeImages).toHaveBeenCalledWith(supabase, ["user-1/trip-1/old.png"]);
+  });
+
+  it("keeps the cover when the draft still uses it", async () => {
+    const cover = "user-1/trip-1/cover.png";
+    jest.mocked(findTripById).mockResolvedValue({ ...trip, cover_image_url: cover });
+    jest.mocked(findPublishedTripById).mockResolvedValue({ ...publishedTrip, cover_image_url: cover });
+    jest.mocked(upsertPublishedTrip).mockResolvedValue(publishedTrip);
+
+    await publishTripForUser(supabase, "trip-1", "user-1", author);
+
+    expect(removeImages).not.toHaveBeenCalled();
+  });
+
   it("rejects a trip the user doesn't own", async () => {
     jest.mocked(findTripById).mockResolvedValue(null);
 
@@ -357,6 +442,27 @@ describe("unpublishTripForUser", () => {
 
     expect(deletePublishedTrip).toHaveBeenCalledWith(supabase, "trip-1", "user-1");
     expect(removeImages).toHaveBeenCalledWith(supabase, ["user-1/trip-1/a.png"]);
+  });
+
+  it("removes a cover only the snapshot used", async () => {
+    jest
+      .mocked(findPublishedTripById)
+      .mockResolvedValue({ ...publishedTrip, cover_image_url: "user-1/trip-1/old.png" });
+    jest.mocked(findTripById).mockResolvedValue({ ...trip, cover_image_url: null });
+
+    await unpublishTripForUser(supabase, "trip-1", "user-1");
+
+    expect(removeImages).toHaveBeenCalledWith(supabase, ["user-1/trip-1/old.png"]);
+  });
+
+  it("keeps the cover when the draft still uses it", async () => {
+    const cover = "user-1/trip-1/cover.png";
+    jest.mocked(findPublishedTripById).mockResolvedValue({ ...publishedTrip, cover_image_url: cover });
+    jest.mocked(findTripById).mockResolvedValue({ ...trip, cover_image_url: cover });
+
+    await unpublishTripForUser(supabase, "trip-1", "user-1");
+
+    expect(removeImages).not.toHaveBeenCalled();
   });
 
   it("does not touch storage when the trip wasn't published", async () => {

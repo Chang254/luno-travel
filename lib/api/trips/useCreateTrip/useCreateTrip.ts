@@ -7,7 +7,7 @@ import { uploadTripImage } from "../useUploadTripImage/useUploadTripImage.helper
 interface CreateTripInput {
   title: string;
   coverImage?: File | null;
-  city?: TripCityInput | null;
+  city: TripCityInput;
 }
 
 /**
@@ -20,7 +20,7 @@ export function useCreateTrip() {
 
   return useMutation({
     mutationFn: async ({ title, coverImage, city }: CreateTripInput) => {
-      const trip = await utils.client.trips.create.mutate({ title, city: city ?? undefined });
+      const trip = await utils.client.trips.create.mutate({ title, city });
       if (!coverImage) return trip;
 
       const coverImagePath = await uploadTripImage(utils.client, trip.id, coverImage);

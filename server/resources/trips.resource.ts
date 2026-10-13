@@ -2,6 +2,10 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/supabase/database.types";
 import type { Trip, TripCity } from "@/server/models/trips.types";
 
+/** Columns the trip details dialog can change; omitted ones are left as they are. */
+export type TripDetailsUpdate = Pick<Trip, "title"> &
+  Partial<TripCity & Pick<Trip, "cover_image_url">>;
+
 export async function findTripsByOwnerId(
   supabase: SupabaseClient<Database>,
   ownerId: string,
@@ -54,7 +58,7 @@ export async function insertTrip(
   supabase: SupabaseClient<Database>,
   ownerId: string,
   title: string,
-  city?: TripCity,
+  city: TripCity,
 ): Promise<Trip> {
   const { data, error } = await supabase
     .from("trips")
@@ -84,15 +88,15 @@ export async function updateTripCover(
   return data;
 }
 
-export async function updateTripCity(
+export async function updateTripDetails(
   supabase: SupabaseClient<Database>,
   id: string,
   ownerId: string,
-  city: TripCity,
+  details: TripDetailsUpdate,
 ): Promise<Trip> {
   const { data, error } = await supabase
     .from("trips")
-    .update(city)
+    .update(details)
     .eq("id", id)
     .eq("owner_id", ownerId)
     .select("*")

@@ -3,7 +3,12 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/supabase/database.types";
 import type { UserProfile } from "@/lib/auth/userProfile";
 import type { PublishedTrip } from "@/server/models/publishedTrips.types";
-import type { Trip, TripCity, TripCityInput } from "@/server/models/trips.types";
+import type {
+  Trip,
+  TripCity,
+  TripCityInput,
+  UpdateTripDetailsInput,
+} from "@/server/models/trips.types";
 import {
   deletePublishedTrip,
   findPublishedTripById,
@@ -14,12 +19,16 @@ import {
   findTripById,
   findTripsByOwnerId,
   insertTrip,
-  updateTripCity,
   updateTripContent,
+  updateTripDetails,
   updateTripCover,
 } from "@/server/resources/trips.resource";
 import { getCityDetails } from "@/server/services/places.service";
-import { getRemovedImagePaths, getTripImageFolder } from "@/server/services/tripImages.service";
+import {
+  getRemovedCoverPaths,
+  getRemovedImagePaths,
+  getTripImageFolder,
+} from "@/server/services/tripImages.service";
 
 export async function getTripsForUser(
   supabase: SupabaseClient<Database>,
@@ -36,12 +45,8 @@ export async function getTripForUser(
   return findTripById(supabase, id, ownerId);
 }
 
-const NO_CITY: TripCity = { city_place_id: null, city_name: null, city_country_code: null };
-
 /** Looks the picked place up with Google so the stored name and country can't be forged. */
-async function resolveTripCity(city: TripCityInput | null): Promise<TripCity> {
-  if (!city) return NO_CITY;
-
+async function resolveTripCity(city: TripCityInput): Promise<TripCity> {
   const details = await getCityDetails(city.placeId, city.sessionToken);
   return {
     city_place_id: details.placeId,
@@ -54,37 +59,60 @@ export async function createTripForUser(
   supabase: SupabaseClient<Database>,
   ownerId: string,
   title: string,
-  city?: TripCityInput,
+  city: TripCityInput,
 ): Promise<Trip> {
-  if (!city) return insertTrip(supabase, ownerId, title);
   return insertTrip(supabase, ownerId, title, await resolveTripCity(city));
 }
 
-export async function updateTripCityForUser(
-  supabase: SupabaseClient<Database>,
-  id: string,
-  ownerId: string,
-  city: TripCityInput | null,
-): Promise<Trip> {
-  return updateTripCity(supabase, id, ownerId, await resolveTripCity(city));
+/** Covers must sit in this trip's image folder so a client can't point one at another user's object. */
+function assertTripImagePath(ownerId: string, id: string, path: string) {
+  const folder = getTripImageFolder(ownerId, id);
+  if (!path.startsWith(folder) || path.includes("..")) {
+    throw new TRPCError({ code: "BAD_REQUEST", message: "Invalid cover image path" });
+  }
 }
 
-/**
- * Sets the cover to an uploaded object path. The path must sit in this trip's
- * image folder so a client can't point the cover at another user's object.
- */
+/** Sets the cover to an uploaded object path. */
 export async function updateTripCoverForUser(
   supabase: SupabaseClient<Database>,
   id: string,
   ownerId: string,
   coverImagePath: string,
 ): Promise<Trip> {
-  const folder = getTripImageFolder(ownerId, id);
-  if (!coverImagePath.startsWith(folder) || coverImagePath.includes("..")) {
-    throw new TRPCError({ code: "BAD_REQUEST", message: "Invalid cover image path" });
+  assertTripImagePath(ownerId, id, coverImagePath);
+  return updateTripCover(supabase, id, ownerId, coverImagePath);
+}
+
+/**
+ * Saves the title, plus the place and cover when they changed. A replaced or
+ * removed cover is then deleted from storage, unless the published snapshot
+ * still shows it.
+ */
+export async function updateTripDetailsForUser(
+  supabase: SupabaseClient<Database>,
+  id: string,
+  ownerId: string,
+  { title, city, coverImagePath }: UpdateTripDetailsInput,
+): Promise<Trip> {
+  if (coverImagePath) assertTripImagePath(ownerId, id, coverImagePath);
+
+  const resolvedCity = city && (await resolveTripCity(city));
+  const previous = await findTripById(supabase, id, ownerId);
+  const trip = await updateTripDetails(supabase, id, ownerId, {
+    title,
+    ...resolvedCity,
+    ...(coverImagePath !== undefined && { cover_image_url: coverImagePath }),
+  });
+
+  if (previous?.cover_image_url && previous.cover_image_url !== trip.cover_image_url) {
+    const published = await findPublishedTripById(supabase, id);
+    await removeUnreferencedImages(
+      supabase,
+      getRemovedCoverPaths(previous.cover_image_url, ownerId, id, [published?.cover_image_url]),
+    );
   }
 
-  return updateTripCover(supabase, id, ownerId, coverImagePath);
+  return trip;
 }
 
 /**
@@ -146,8 +174,8 @@ export async function getPublicationForUser(
 /**
  * Copies the saved draft into the public snapshot, replacing any previous
  * one. The author's name and avatar are snapshotted too, since anonymous
- * readers can't look up the owner. Images only the old snapshot referenced
- * are then removed.
+ * readers can't look up the owner. Images (including the cover) only the old
+ * snapshot referenced are then removed.
  */
 export async function publishTripForUser(
   supabase: SupabaseClient<Database>,
@@ -174,15 +202,15 @@ export async function publishTripForUser(
     author_avatar_url: author.avatarUrl,
   });
 
-  await removeUnreferencedImages(
-    supabase,
-    getRemovedImagePaths(previous?.content, trip.content, ownerId, id),
-  );
+  await removeUnreferencedImages(supabase, [
+    ...getRemovedImagePaths(previous?.content, trip.content, ownerId, id),
+    ...getRemovedCoverPaths(previous?.cover_image_url, ownerId, id, [trip.cover_image_url]),
+  ]);
 
   return published;
 }
 
-/** Removes the public snapshot, then any images only it referenced. */
+/** Removes the public snapshot, then any images (including the cover) only it referenced. */
 export async function unpublishTripForUser(
   supabase: SupabaseClient<Database>,
   id: string,
@@ -194,8 +222,8 @@ export async function unpublishTripForUser(
   const trip = await findTripById(supabase, id, ownerId);
   if (!previous || !trip) return;
 
-  await removeUnreferencedImages(
-    supabase,
-    getRemovedImagePaths(previous.content, trip.content, ownerId, id),
-  );
+  await removeUnreferencedImages(supabase, [
+    ...getRemovedImagePaths(previous.content, trip.content, ownerId, id),
+    ...getRemovedCoverPaths(previous.cover_image_url, ownerId, id, [trip.cover_image_url]),
+  ]);
 }

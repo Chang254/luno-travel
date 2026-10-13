@@ -28,16 +28,23 @@ export const tripCityInputSchema = z.object({
 
 export type TripCityInput = z.infer<typeof tripCityInputSchema>;
 
+export const tripTitleSchema = z.string().trim().min(1).max(200);
+
 export const createTripInputSchema = z.object({
-  title: z.string().trim().min(1).max(200),
-  city: tripCityInputSchema.optional(),
+  title: tripTitleSchema,
+  city: tripCityInputSchema,
 });
 
-export const updateTripCityInputSchema = z.object({
+export const updateTripDetailsInputSchema = z.object({
   id: z.string(),
-  /** `null` clears the city. */
-  city: tripCityInputSchema.nullable(),
+  title: tripTitleSchema,
+  /** Sent only when a new place was picked; omitted keeps the current one. */
+  city: tripCityInputSchema.optional(),
+  /** Object path from `createImageUpload`; `null` removes the cover, omitted keeps it. */
+  coverImagePath: z.string().nullable().optional(),
 });
+
+export type UpdateTripDetailsInput = Omit<z.infer<typeof updateTripDetailsInputSchema>, "id">;
 
 export const updateTripCoverInputSchema = z.object({
   id: z.string(),

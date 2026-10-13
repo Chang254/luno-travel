@@ -34,14 +34,15 @@ async function AuthenticatedEditor({ params }: AuthenticatedEditorProps) {
   return (
     <>
       <EditorHeader
-        title={trip.title}
         tripId={trip.id}
-        isPublished={publication !== null}
-        city={{
+        details={{
+          title: trip.title,
+          cover_image_url: trip.cover_image_url,
           city_place_id: trip.city_place_id,
           city_name: trip.city_name,
           city_country_code: trip.city_country_code,
         }}
+        isPublished={publication !== null}
       />
       <div className={styles.editorContent}>
         <LexicalEditor tripId={trip.id} initialContent={trip.content} />

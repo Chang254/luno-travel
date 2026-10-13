@@ -66,9 +66,9 @@ export type Database = {
       }
       trips: {
         Row: {
-          city_country_code: string | null
-          city_name: string | null
-          city_place_id: string | null
+          city_country_code: string
+          city_name: string
+          city_place_id: string
           content: Json
           cover_image_url: string | null
           created_at: string
@@ -78,9 +78,9 @@ export type Database = {
           updated_at: string
         }
         Insert: {
-          city_country_code?: string | null
-          city_name?: string | null
-          city_place_id?: string | null
+          city_country_code: string
+          city_name: string
+          city_place_id: string
           content?: Json
           cover_image_url?: string | null
           created_at?: string
@@ -90,9 +90,9 @@ export type Database = {
           updated_at?: string
         }
         Update: {
-          city_country_code?: string | null
-          city_name?: string | null
-          city_place_id?: string | null
+          city_country_code?: string
+          city_name?: string
+          city_place_id?: string
           content?: Json
           cover_image_url?: string | null
           created_at?: string

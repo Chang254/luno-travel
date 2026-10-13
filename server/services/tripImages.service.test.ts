@@ -3,6 +3,7 @@ import { findTripById } from "../resources/trips.resource";
 import {
   createImageUploadForUser,
   extractImagePaths,
+  getRemovedCoverPaths,
   getRemovedImagePaths,
 } from "./tripImages.service";
 
@@ -17,9 +18,9 @@ const trip = {
   title: "Kyoto",
   content: {},
   cover_image_url: null,
-  city_place_id: null,
-  city_name: null,
-  city_country_code: null,
+  city_place_id: "place-kyoto",
+  city_name: "Kyoto",
+  city_country_code: "JP",
   created_at: "2026-01-01T00:00:00.000Z",
   updated_at: "2026-01-01T00:00:00.000Z",
 };
@@ -116,5 +117,30 @@ describe("getRemovedImagePaths", () => {
     );
 
     expect(removed).toEqual([]);
+  });
+});
+
+describe("getRemovedCoverPaths", () => {
+  it("returns the previous cover when nothing retained still uses it", () => {
+    expect(
+      getRemovedCoverPaths("user-1/trip-1/old.png", "user-1", "trip-1", ["user-1/trip-1/new.png"]),
+    ).toEqual(["user-1/trip-1/old.png"]);
+  });
+
+  it("keeps a cover that's still retained", () => {
+    expect(
+      getRemovedCoverPaths("user-1/trip-1/old.png", "user-1", "trip-1", ["user-1/trip-1/old.png"]),
+    ).toEqual([]);
+  });
+
+  it("returns nothing when there was no cover", () => {
+    expect(getRemovedCoverPaths(null, "user-1", "trip-1", [])).toEqual([]);
+  });
+
+  it.each([
+    ["another user's folder", "user-2/trip-1/old.png"],
+    ["a path that escapes the folder", "user-1/trip-1/../../user-2/trip-9/old.png"],
+  ])("never returns a cover in %s", (_, path) => {
+    expect(getRemovedCoverPaths(path, "user-1", "trip-1", [])).toEqual([]);
   });
 });
