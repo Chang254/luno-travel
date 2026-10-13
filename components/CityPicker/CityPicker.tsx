@@ -127,9 +127,10 @@ export default function CityPicker({
                     <CommandItem
                       key={suggestion.placeId}
                       value={suggestion.placeId}
+                      className={styles.option}
                       onSelect={() => selectSuggestion(suggestion)}
                     >
-                      <MapPin />
+                      <MapPin className={styles.optionIcon} />
                       <span className={styles.suggestion}>
                         <span>{suggestion.primaryText}</span>
                         <span className={styles.suggestionDetail}>{suggestion.secondaryText}</span>
