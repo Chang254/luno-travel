@@ -4,7 +4,7 @@ import { Suspense } from "react";
 import TripLoading from "@/components/TripLoading";
 import { getUserProfile } from "@/lib/auth/userProfile";
 import { createClient } from "@/lib/supabase/server";
-import { getPublicationForUser, getTripForUser } from "@/server/services/trips.service";
+import { getPublicationForUser, getTripForUser } from "@/server/services/trips";
 
 import TripByline from "../TripByline";
 import TripReader from "../TripReader";

@@ -5,13 +5,13 @@ import {
   updateTripContent,
   updateTripDetails,
   updateTripCover,
-} from "../resources/trips.resource";
+} from "@/server/resources/trips";
 import {
   deletePublishedTrip,
   findPublishedTripById,
   upsertPublishedTrip,
-} from "../resources/publishedTrips.resource";
-import { removeImages } from "../resources/tripImages.resource";
+} from "@/server/resources/publishedTrips";
+import { removeImages } from "@/server/resources/tripImages";
 import {
   createTripForUser,
   getPublicationForUser,
@@ -24,9 +24,9 @@ import {
   updateTripCoverForUser,
 } from "./trips.service";
 
-jest.mock("../resources/trips.resource");
-jest.mock("../resources/publishedTrips.resource");
-jest.mock("../resources/tripImages.resource");
+jest.mock("@/server/resources/trips");
+jest.mock("@/server/resources/publishedTrips");
+jest.mock("@/server/resources/tripImages");
 
 const kyoto = {
   id: 1857910,

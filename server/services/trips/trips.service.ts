@@ -3,18 +3,13 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/supabase/database.types";
 import type { UserProfile } from "@/lib/auth/userProfile";
 import type { PublishedTrip } from "@/server/models/publishedTrips.types";
-import type {
-  Trip,
-  TripCity,
-  TripCityInput,
-  UpdateTripDetailsInput,
-} from "@/server/models/trips.types";
+import type { Trip, TripCityInput, UpdateTripDetailsInput } from "@/server/models/trips.types";
 import {
   deletePublishedTrip,
   findPublishedTripById,
   upsertPublishedTrip,
-} from "@/server/resources/publishedTrips.resource";
-import { removeImages } from "@/server/resources/tripImages.resource";
+} from "@/server/resources/publishedTrips";
+import { removeImages } from "@/server/resources/tripImages";
 import {
   findTripById,
   findTripsByOwnerId,
@@ -22,12 +17,9 @@ import {
   updateTripContent,
   updateTripDetails,
   updateTripCover,
-} from "@/server/resources/trips.resource";
-import {
-  getRemovedCoverPaths,
-  getRemovedImagePaths,
-  getTripImageFolder,
-} from "@/server/services/tripImages.service";
+} from "@/server/resources/trips";
+import { getRemovedCoverPaths, getRemovedImagePaths } from "@/server/services/tripImages";
+import { assertTripImagePath, toTripCity, withCityCheck } from "./trips.helpers";
 
 export async function getTripsForUser(
   supabase: SupabaseClient<Database>,
@@ -44,25 +36,6 @@ export async function getTripForUser(
   return findTripById(supabase, id, ownerId);
 }
 
-/** Postgres error code for a foreign key violation. */
-const FOREIGN_KEY_VIOLATION = "23503";
-
-function toTripCity({ geonameId }: TripCityInput): TripCity {
-  return { city_id: geonameId };
-}
-
-/** A picked city id missing from `cities` fails its foreign key; report that as bad input. */
-async function withCityCheck<T>(write: Promise<T>): Promise<T> {
-  try {
-    return await write;
-  } catch (error) {
-    if ((error as { code?: string }).code === FOREIGN_KEY_VIOLATION) {
-      throw new TRPCError({ code: "BAD_REQUEST", message: "Unknown city" });
-    }
-    throw error;
-  }
-}
-
 export async function createTripForUser(
   supabase: SupabaseClient<Database>,
   ownerId: string,
@@ -70,14 +43,6 @@ export async function createTripForUser(
   city: TripCityInput,
 ): Promise<Trip> {
   return withCityCheck(insertTrip(supabase, ownerId, title, toTripCity(city)));
-}
-
-/** Covers must sit in this trip's image folder so a client can't point one at another user's object. */
-function assertTripImagePath(ownerId: string, id: string, path: string) {
-  const folder = getTripImageFolder(ownerId, id);
-  if (!path.startsWith(folder) || path.includes("..")) {
-    throw new TRPCError({ code: "BAD_REQUEST", message: "Invalid cover image path" });
-  }
 }
 
 /** Sets the cover to an uploaded object path. */

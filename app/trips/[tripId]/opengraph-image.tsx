@@ -2,7 +2,7 @@ import { ImageResponse } from "next/og";
 
 import { createClient } from "@/lib/supabase/server";
 import { getTripImageUrl } from "@/lib/supabase/storage";
-import { getPublishedTrip } from "@/server/services/trips.service";
+import { getPublishedTrip } from "@/server/services/trips";
 
 import { fetchImageDataUrl, getFlagDataUrl } from "./ogImage.helpers";
 

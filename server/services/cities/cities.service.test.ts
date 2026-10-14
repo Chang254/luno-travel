@@ -1,7 +1,7 @@
-import { searchCityRows } from "../resources/cities.resource";
+import { searchCityRows } from "@/server/resources/cities";
 import { searchCities } from "./cities.service";
 
-jest.mock("../resources/cities.resource");
+jest.mock("@/server/resources/cities");
 
 const supabase = {} as Parameters<typeof searchCities>[0];
 

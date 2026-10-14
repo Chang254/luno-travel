@@ -171,15 +171,24 @@ server/
       _app.ts            // appRouter — combines all feature routers
       <feature>.ts         // e.g. trips.ts
   services/
-    <feature>.service.ts   // business logic, calls the resource layer
+    <feature>/
+      index.ts                  // barrel: named re-exports of the service (and any helpers other features need)
+      <feature>.service.ts      // business logic, calls the resource layer
+      <feature>.helpers.ts      // pure functions the service uses (only when needed)
+      <feature>.service.test.ts
+      <feature>.helpers.test.ts
   resources/
-    <feature>.resource.ts  // the ONLY layer allowed to call the Supabase client
+    <feature>/
+      index.ts
+      <feature>.resource.ts     // the ONLY layer allowed to call the Supabase client
   models/
     <feature>.types.ts       // shared domain types (and zod schemas once a procedure takes input)
 ```
 
 - **Routers** are thin: parse input, call a service, return its result. No business logic, no direct Supabase calls.
 - **Services** hold business logic and orchestration. This is the unit-test boundary — test services the way you'd test any other function with business logic, mocking the resource layer.
+- **Helpers** (`<feature>.helpers.ts`) hold pure logic that doesn't orchestrate: path building, mapping rows to DTOs, parsing, validation predicates. The service file keeps only functions that call resources or make business decisions. Like on the frontend, a helpers file is added only when needed. Test helpers directly in `<feature>.helpers.test.ts`, with no mocks.
+- Across folders, import from the barrel (`@/server/services/trips`, `@/server/resources/cities`), never the inner file; inside a folder, import siblings relatively (`./trips.helpers`). In tests, `jest.mock` the barrel path (`@/server/resources/trips`) so it matches what the service imports.
 - **Resources** are pure data access and the only place `supabase.from(...)` is called.
 - **Models** hold domain types shared across the other three layers (e.g. a `Trip` type derived from the generated `Database` type).
 - Use `protectedProcedure` (defined in `trpc.ts`) for anything that requires an authenticated user — it throws `TRPCError({ code: "UNAUTHORIZED" })` when there's no session, mirroring the existing `getClaims()` check used by `/editor` and the proxy.

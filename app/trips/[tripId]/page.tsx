@@ -4,7 +4,7 @@ import { cache, Suspense } from "react";
 
 import TripLoading from "@/components/TripLoading";
 import { createClient } from "@/lib/supabase/server";
-import { getPublishedTrip } from "@/server/services/trips.service";
+import { getPublishedTrip } from "@/server/services/trips";
 
 import { getShareDescription } from "./ogImage.helpers";
 import TripByline from "./TripByline";

@@ -1,7 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/supabase/database.types";
 import type { PublishedTrip, PublishedTripRow } from "@/server/models/publishedTrips.types";
-import { CITY_EMBED } from "@/server/resources/cities.resource";
+import { CITY_EMBED } from "@/server/resources/cities";
 
 const PUBLISHED_TRIP_SELECT = `*, ${CITY_EMBED}` as const;
 

@@ -11,8 +11,8 @@ import {
   updateTripContentForUser,
   updateTripDetailsForUser,
   updateTripCoverForUser,
-} from "@/server/services/trips.service";
-import { createImageUploadForUser } from "@/server/services/tripImages.service";
+} from "@/server/services/trips";
+import { createImageUploadForUser } from "@/server/services/tripImages";
 import {
   createTripInputSchema,
   getTripInputSchema,

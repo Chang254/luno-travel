@@ -1,17 +1,9 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 import type { Database } from "@/lib/supabase/database.types";
-import type { City, CitySuggestion } from "@/server/models/cities.types";
-import { searchCityRows } from "@/server/resources/cities.resource";
-
-function toSuggestion({ id, name, country_code, country_name, region_name }: City): CitySuggestion {
-  return {
-    geonameId: id,
-    primaryText: name,
-    secondaryText: [region_name, country_name].filter(Boolean).join(", "),
-    countryCode: country_code,
-  };
-}
+import type { CitySuggestion } from "@/server/models/cities.types";
+import { searchCityRows } from "@/server/resources/cities";
+import { toSuggestion } from "./cities.helpers";
 
 /**
  * Best matches for a typed city name. Text after a comma narrows by region or

@@ -1,5 +1,5 @@
 import { protectedProcedure, router } from "@/server/trpc/trpc";
-import { searchCities } from "@/server/services/cities.service";
+import { searchCities } from "@/server/services/cities";
 import { searchCitiesInputSchema } from "@/server/models/cities.types";
 
 export const citiesRouter = router({

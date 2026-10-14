@@ -2,7 +2,7 @@ import { notFound, redirect } from "next/navigation";
 import { Suspense } from "react";
 
 import { createClient } from "@/lib/supabase/server";
-import { getPublicationForUser, getTripForUser } from "@/server/services/trips.service";
+import { getPublicationForUser, getTripForUser } from "@/server/services/trips";
 
 import EditorHeader from "./EditorHeader";
 import TripLoading from "@/components/TripLoading";
