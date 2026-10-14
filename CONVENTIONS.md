@@ -10,12 +10,12 @@ This document contains the patterns and practices that should be followed when c
   - [Folder Structure](#folder-structure)
   - [Shared UI components](#shared-ui-components)
   - [Styles](#styles)
+  - [Frontend API proxy](#frontend-api-proxy)
   - [Testing](#testing)
 - [Backend](#backend)
   - [API layer (tRPC)](#api-layer-trpc)
   - [Database migrations](#database-migrations)
   - [Database types](#database-types)
-  - [Frontend API proxy](#frontend-api-proxy)
 
 ## General
 
@@ -152,6 +152,10 @@ Tests should mimic real user behavior as closely as possible
 
 • Prioritize Visible Element Selectors: Avoid querying internal component states, test IDs, or strict CSS classes unless absolutely necessary. Instead, query elements based on visible text, labels, accessible roles, or placeholders.
 
+### Frontend API proxy
+
+Each backend router gets a matching folder under `lib/api/<feature>/` (e.g. `server/trpc/routers/trips.ts` ↔ `lib/api/trips/`) exposing a thin React Query hook (e.g. `useTrips()`), barrel-exported via `index.ts`. Each hook lives in its own folder (`lib/api/trips/useTrips/useTrips.ts` + `index.ts` re-exporting the named hook), and the feature-level `index.ts` re-exports from those folders. Components call `useTrips()` from `@/lib/api/trips`, never the raw `trpc` client directly.
+
 ## Backend
 
 ### API layer (tRPC)
@@ -198,10 +202,4 @@ If a change was made in the dashboard anyway, capture it with `npx supabase db p
 
 ### Database types
 
-`npm run db:types` regenerates `lib/supabase/database.types.ts` from the live Supabase schema. Run it after any migration. The Supabase clients in `lib/supabase/` are generic over this `Database` type — don't bypass that typing with casts.
-
-### Frontend API proxy
-
-Each backend router gets a matching folder under `lib/api/<feature>/` (e.g. `server/trpc/routers/trips.ts` ↔ `lib/api/trips/`) exposing a thin React Query hook (e.g. `useTrips()`), barrel-exported via `index.ts`. Each hook lives in its own folder (`lib/api/trips/useTrips/useTrips.ts` + `index.ts` re-exporting the named hook), and the feature-level `index.ts` re-exports from those folders. Components call `useTrips()` from `@/lib/api/trips`, never the raw `trpc` client directly.
-
-There is no separate fetch-logic file in these folders: `trpc.<feature>.<procedure>.useQuery()`/`useMutation()` already is the fetch layer (request, cache key, retries, types all handled by the tRPC React Query link). The hook only exists to keep that abstraction swappable from the rest of the app.
+`npm run db:types` regenerates `lib/supabase/database.types.ts` from the live Supabase schema. Run it after any migration.
