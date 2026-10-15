@@ -1,4 +1,4 @@
-# LUNO
+# LUNO Travel
 
 ## WIP
 
